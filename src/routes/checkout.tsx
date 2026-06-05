@@ -53,10 +53,21 @@ function CheckoutPage() {
     e.preventDefault();
     setBusy(true);
     try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      console.log("Checkout session exists:", !!session);
+      if (sessionError || !session) {
+        console.error("No valid session:", sessionError);
+        toast.error("Please login again");
+        return;
+      }
+
+      const userId = session.user.id;
+      console.log("Checkout user ID:", userId);
+
       const orderTotal = Number(total) + DELIVERY_FEE;
 
       const orderData = {
-        consumer_id: user.id,
+        consumer_id: userId,
         total: orderTotal,
         delivery_fee: DELIVERY_FEE,
         delivery_address: address,
@@ -64,6 +75,8 @@ function CheckoutPage() {
         status: "pending" as const,
         notes: bottleExchange ? "Bottle-to-bottle exchange requested" : null,
       };
+
+      console.log("Checkout insert payload:", orderData);
 
       const { data: order, error } = await supabase
         .from("orders")
@@ -83,7 +96,7 @@ function CheckoutPage() {
       if (itemsErr) throw itemsErr;
 
       const { data: earned } = await supabase.rpc("award_order_points", { _order_id: order.id });
-      await supabase.from("profiles").update({ address, phone }).eq("id", user.id);
+      await supabase.from("profiles").update({ address, phone }).eq("id", userId);
 
       clear();
       toast.success(`Order placed! ${earned && earned > 0 ? `+${earned} points earned` : ""}`);
