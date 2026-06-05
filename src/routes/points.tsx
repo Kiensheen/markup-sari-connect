@@ -35,8 +35,8 @@ function PointsPage() {
   const redeem = async (r: typeof rewards[number]) => {
     if (!user) return;
     if (balance < r.cost) { toast.error("Not enough points"); return; }
-    await supabase.from("points_transactions").insert({ user_id: user.id, points_redeemed: r.cost, source: `Redeemed: ${r.name}` });
-    await supabase.from("profiles").update({ points_balance: balance - r.cost }).eq("id", user.id);
+    const { error } = await supabase.rpc("redeem_points", { _cost: r.cost, _source: `Redeemed: ${r.name}` });
+    if (error) { toast.error(error.message); return; }
     toast.success(`Redeemed ${r.name}!`);
     refresh();
   };
