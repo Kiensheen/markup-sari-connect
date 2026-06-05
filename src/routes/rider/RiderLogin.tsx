@@ -2,7 +2,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Truck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { isRider } from "@/lib/rider-utils";
 import { toast } from "sonner";
 
 export function RiderLogin() {
@@ -21,8 +20,13 @@ export function RiderLogin() {
       if (authError) throw authError;
       if (!data.user) throw new Error("Sign in failed");
 
-      const rider = await isRider(data.user.id);
-      if (!rider) {
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+
+      if (roleData?.role !== "rider") {
         await supabase.auth.signOut();
         setError("Not authorized as rider");
         return;

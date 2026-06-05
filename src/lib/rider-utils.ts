@@ -11,9 +11,8 @@ export async function isRider(userId: string): Promise<boolean> {
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
-    .eq("role", "rider")
     .maybeSingle();
-  return !!data;
+  return data?.role === "rider";
 }
 
 export function formatPeso(amount: number) {
