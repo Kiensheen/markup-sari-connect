@@ -57,15 +57,8 @@ function CheckoutPage() {
       );
       if (itemsErr) throw itemsErr;
 
-      // Earn points: 1 point per ₱100 spent
-      const earned = Math.floor(total / 100);
-      if (earned > 0) {
-        await supabase.from("points_transactions").insert({
-          user_id: user.id, points_earned: earned, source: `Order ${order.id.slice(0,8)}`,
-        });
-        const { data: prof } = await supabase.from("profiles").select("points_balance").eq("id", user.id).maybeSingle();
-        await supabase.from("profiles").update({ points_balance: (prof?.points_balance ?? 0) + earned }).eq("id", user.id);
-      }
+      // Earn points server-side (1 point per ₱100 spent, computed & awarded by RPC)
+      const { data: earned } = await supabase.rpc("award_order_points", { _order_id: order.id });
       // Save address/phone
       await supabase.from("profiles").update({ address, phone }).eq("id", user.id);
 
