@@ -241,12 +241,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      award_order_points: { Args: { _order_id: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      redeem_points: {
+        Args: { _cost: number; _source: string }
+        Returns: undefined
       }
     }
     Enums: {
