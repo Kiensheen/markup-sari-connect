@@ -53,25 +53,33 @@ function CheckoutPage() {
     e.preventDefault();
     setBusy(true);
     try {
-      const orderNotes = [
-        notes,
-        bottleExchange ? "Bottle-to-bottle exchange requested" : "",
-      ].filter(Boolean).join(". ");
+      const orderTotal = Number(total) + DELIVERY_FEE;
 
-      const { data: order, error } = await supabase.from("orders").insert({
+      const orderData = {
         consumer_id: user.id,
-        status: "pending",
-        total: total + DELIVERY_FEE,
+        total: orderTotal,
         delivery_fee: DELIVERY_FEE,
-        payment_method: payment,
         delivery_address: address,
-        notes: orderNotes || null,
-      }).select().single();
+        payment_method: payment,
+        status: "pending" as const,
+        notes: bottleExchange ? "Bottle-to-bottle exchange requested" : null,
+      };
+
+      const { data: order, error } = await supabase
+        .from("orders")
+        .insert(orderData)
+        .select()
+        .single();
       if (error) throw error;
 
-      const { error: itemsErr } = await supabase.from("order_items").insert(
-        items.map((i) => ({ order_id: order.id, product_id: i.id, quantity: i.quantity, price: i.price }))
-      );
+      const orderItems = items.map((i) => ({
+        order_id: order.id,
+        product_id: i.id,
+        quantity: i.quantity,
+        price: Number(i.price),
+      }));
+
+      const { error: itemsErr } = await supabase.from("order_items").insert(orderItems);
       if (itemsErr) throw itemsErr;
 
       const { data: earned } = await supabase.rpc("award_order_points", { _order_id: order.id });
