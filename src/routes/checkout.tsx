@@ -63,7 +63,7 @@ function CheckoutPage() {
       await supabase.from("profiles").update({ address, phone }).eq("id", user.id);
 
       clear();
-      toast.success(`Order placed! ${earned > 0 ? `+${earned} points` : ""}`);
+      toast.success(`Order placed! ${earned && earned > 0 ? `+${earned} points` : ""}`);
       navigate({ to: "/orders" });
     } catch (err: any) {
       toast.error(err.message ?? "Failed to place order");
