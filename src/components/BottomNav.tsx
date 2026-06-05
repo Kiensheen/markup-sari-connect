@@ -1,13 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, ShoppingCart, Package, Award, Recycle } from "lucide-react";
+import { Home, ShoppingCart, Package, User } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 
 const tabs = [
-  { to: "/", label: "Shop", icon: Home },
+  { to: "/", label: "Home", icon: Home },
   { to: "/cart", label: "Cart", icon: ShoppingCart },
   { to: "/orders", label: "Orders", icon: Package },
-  { to: "/points", label: "Points", icon: Award },
-  { to: "/bottle-exchange", label: "Bottles", icon: Recycle },
+  { to: "/profile", label: "Profile", icon: User },
 ];
 
 export function BottomNav() {
