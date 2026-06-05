@@ -19,8 +19,8 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as RiderRouteRouteImport } from './routes/rider/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RiderIndexRouteImport } from './routes/rider/index'
+import { Route as RiderLoginRouteImport } from './routes/rider_.login'
 import { Route as RiderProfileRouteImport } from './routes/rider/profile'
-import { Route as RiderLoginRouteImport } from './routes/rider.login'
 import { Route as RiderEarningsRouteImport } from './routes/rider/earnings'
 import { Route as RiderDashboardRouteImport } from './routes/rider/dashboard'
 
@@ -74,14 +74,14 @@ const RiderIndexRoute = RiderIndexRouteImport.update({
   path: '/',
   getParentRoute: () => RiderRouteRoute,
 } as any)
+const RiderLoginRoute = RiderLoginRouteImport.update({
+  id: '/rider_/login',
+  path: '/rider/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RiderProfileRoute = RiderProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
-  getParentRoute: () => RiderRouteRoute,
-} as any)
-const RiderLoginRoute = RiderLoginRouteImport.update({
-  id: '/login',
-  path: '/login',
   getParentRoute: () => RiderRouteRoute,
 } as any)
 const RiderEarningsRoute = RiderEarningsRouteImport.update({
@@ -107,8 +107,8 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/rider/dashboard': typeof RiderDashboardRoute
   '/rider/earnings': typeof RiderEarningsRoute
-  '/rider/login': typeof RiderLoginRoute
   '/rider/profile': typeof RiderProfileRoute
+  '/rider/login': typeof RiderLoginRoute
   '/rider/': typeof RiderIndexRoute
 }
 export interface FileRoutesByTo {
@@ -122,8 +122,8 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/rider/dashboard': typeof RiderDashboardRoute
   '/rider/earnings': typeof RiderEarningsRoute
-  '/rider/login': typeof RiderLoginRoute
   '/rider/profile': typeof RiderProfileRoute
+  '/rider/login': typeof RiderLoginRoute
   '/rider': typeof RiderIndexRoute
 }
 export interface FileRoutesById {
@@ -139,8 +139,8 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/rider/dashboard': typeof RiderDashboardRoute
   '/rider/earnings': typeof RiderEarningsRoute
-  '/rider/login': typeof RiderLoginRoute
   '/rider/profile': typeof RiderProfileRoute
+  '/rider_/login': typeof RiderLoginRoute
   '/rider/': typeof RiderIndexRoute
 }
 export interface FileRouteTypes {
@@ -157,8 +157,8 @@ export interface FileRouteTypes {
     | '/profile'
     | '/rider/dashboard'
     | '/rider/earnings'
-    | '/rider/login'
     | '/rider/profile'
+    | '/rider/login'
     | '/rider/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -172,8 +172,8 @@ export interface FileRouteTypes {
     | '/profile'
     | '/rider/dashboard'
     | '/rider/earnings'
-    | '/rider/login'
     | '/rider/profile'
+    | '/rider/login'
     | '/rider'
   id:
     | '__root__'
@@ -188,8 +188,8 @@ export interface FileRouteTypes {
     | '/profile'
     | '/rider/dashboard'
     | '/rider/earnings'
-    | '/rider/login'
     | '/rider/profile'
+    | '/rider_/login'
     | '/rider/'
   fileRoutesById: FileRoutesById
 }
@@ -203,6 +203,7 @@ export interface RootRouteChildren {
   OrdersRoute: typeof OrdersRoute
   PointsRoute: typeof PointsRoute
   ProfileRoute: typeof ProfileRoute
+  RiderLoginRoute: typeof RiderLoginRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -277,18 +278,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RiderIndexRouteImport
       parentRoute: typeof RiderRouteRoute
     }
+    '/rider_/login': {
+      id: '/rider_/login'
+      path: '/rider/login'
+      fullPath: '/rider/login'
+      preLoaderRoute: typeof RiderLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rider/profile': {
       id: '/rider/profile'
       path: '/profile'
       fullPath: '/rider/profile'
       preLoaderRoute: typeof RiderProfileRouteImport
-      parentRoute: typeof RiderRouteRoute
-    }
-    '/rider/login': {
-      id: '/rider/login'
-      path: '/login'
-      fullPath: '/rider/login'
-      preLoaderRoute: typeof RiderLoginRouteImport
       parentRoute: typeof RiderRouteRoute
     }
     '/rider/earnings': {
@@ -311,7 +312,6 @@ declare module '@tanstack/react-router' {
 interface RiderRouteRouteChildren {
   RiderDashboardRoute: typeof RiderDashboardRoute
   RiderEarningsRoute: typeof RiderEarningsRoute
-  RiderLoginRoute: typeof RiderLoginRoute
   RiderProfileRoute: typeof RiderProfileRoute
   RiderIndexRoute: typeof RiderIndexRoute
 }
@@ -319,7 +319,6 @@ interface RiderRouteRouteChildren {
 const RiderRouteRouteChildren: RiderRouteRouteChildren = {
   RiderDashboardRoute: RiderDashboardRoute,
   RiderEarningsRoute: RiderEarningsRoute,
-  RiderLoginRoute: RiderLoginRoute,
   RiderProfileRoute: RiderProfileRoute,
   RiderIndexRoute: RiderIndexRoute,
 }
@@ -338,6 +337,7 @@ const rootRouteChildren: RootRouteChildren = {
   OrdersRoute: OrdersRoute,
   PointsRoute: PointsRoute,
   ProfileRoute: ProfileRoute,
+  RiderLoginRoute: RiderLoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
