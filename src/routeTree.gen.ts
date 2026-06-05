@@ -9,14 +9,26 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PointsRouteImport } from './routes/points'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as BottleExchangeRouteImport } from './routes/bottle-exchange'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as RiderRouteRouteImport } from './routes/rider/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RiderIndexRouteImport } from './routes/rider/index'
+import { Route as RiderLoginRouteImport } from './routes/rider_.login'
+import { Route as RiderProfileRouteImport } from './routes/rider/profile'
+import { Route as RiderEarningsRouteImport } from './routes/rider/earnings'
+import { Route as RiderDashboardRouteImport } from './routes/rider/dashboard'
 
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PointsRoute = PointsRouteImport.update({
   id: '/points',
   path: '/points',
@@ -47,20 +59,57 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RiderRouteRoute = RiderRouteRouteImport.update({
+  id: '/rider',
+  path: '/rider',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RiderIndexRoute = RiderIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => RiderRouteRoute,
+} as any)
+const RiderLoginRoute = RiderLoginRouteImport.update({
+  id: '/rider_/login',
+  path: '/rider/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RiderProfileRoute = RiderProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => RiderRouteRoute,
+} as any)
+const RiderEarningsRoute = RiderEarningsRouteImport.update({
+  id: '/earnings',
+  path: '/earnings',
+  getParentRoute: () => RiderRouteRoute,
+} as any)
+const RiderDashboardRoute = RiderDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => RiderRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/rider': typeof RiderRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/bottle-exchange': typeof BottleExchangeRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/orders': typeof OrdersRoute
   '/points': typeof PointsRoute
+  '/profile': typeof ProfileRoute
+  '/rider/dashboard': typeof RiderDashboardRoute
+  '/rider/earnings': typeof RiderEarningsRoute
+  '/rider/profile': typeof RiderProfileRoute
+  '/rider/login': typeof RiderLoginRoute
+  '/rider/': typeof RiderIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,27 +119,47 @@ export interface FileRoutesByTo {
   '/checkout': typeof CheckoutRoute
   '/orders': typeof OrdersRoute
   '/points': typeof PointsRoute
+  '/profile': typeof ProfileRoute
+  '/rider/dashboard': typeof RiderDashboardRoute
+  '/rider/earnings': typeof RiderEarningsRoute
+  '/rider/profile': typeof RiderProfileRoute
+  '/rider/login': typeof RiderLoginRoute
+  '/rider': typeof RiderIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/rider': typeof RiderRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/bottle-exchange': typeof BottleExchangeRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/orders': typeof OrdersRoute
   '/points': typeof PointsRoute
+  '/profile': typeof ProfileRoute
+  '/rider/dashboard': typeof RiderDashboardRoute
+  '/rider/earnings': typeof RiderEarningsRoute
+  '/rider/profile': typeof RiderProfileRoute
+  '/rider_/login': typeof RiderLoginRoute
+  '/rider/': typeof RiderIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/rider'
     | '/auth'
     | '/bottle-exchange'
     | '/cart'
     | '/checkout'
     | '/orders'
     | '/points'
+    | '/profile'
+    | '/rider/dashboard'
+    | '/rider/earnings'
+    | '/rider/profile'
+    | '/rider/login'
+    | '/rider/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -100,29 +169,52 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/orders'
     | '/points'
+    | '/profile'
+    | '/rider/dashboard'
+    | '/rider/earnings'
+    | '/rider/profile'
+    | '/rider/login'
+    | '/rider'
   id:
     | '__root__'
     | '/'
+    | '/rider'
     | '/auth'
     | '/bottle-exchange'
     | '/cart'
     | '/checkout'
     | '/orders'
     | '/points'
+    | '/profile'
+    | '/rider/dashboard'
+    | '/rider/earnings'
+    | '/rider/profile'
+    | '/rider_/login'
+    | '/rider/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  RiderRouteRoute: typeof RiderRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   BottleExchangeRoute: typeof BottleExchangeRoute
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
   OrdersRoute: typeof OrdersRoute
   PointsRoute: typeof PointsRoute
+  ProfileRoute: typeof ProfileRoute
+  RiderLoginRoute: typeof RiderLoginRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/points': {
       id: '/points'
       path: '/points'
@@ -165,6 +257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rider': {
+      id: '/rider'
+      path: '/rider'
+      fullPath: '/rider'
+      preLoaderRoute: typeof RiderRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -172,18 +271,84 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rider/': {
+      id: '/rider/'
+      path: '/'
+      fullPath: '/rider/'
+      preLoaderRoute: typeof RiderIndexRouteImport
+      parentRoute: typeof RiderRouteRoute
+    }
+    '/rider_/login': {
+      id: '/rider_/login'
+      path: '/rider/login'
+      fullPath: '/rider/login'
+      preLoaderRoute: typeof RiderLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rider/profile': {
+      id: '/rider/profile'
+      path: '/profile'
+      fullPath: '/rider/profile'
+      preLoaderRoute: typeof RiderProfileRouteImport
+      parentRoute: typeof RiderRouteRoute
+    }
+    '/rider/earnings': {
+      id: '/rider/earnings'
+      path: '/earnings'
+      fullPath: '/rider/earnings'
+      preLoaderRoute: typeof RiderEarningsRouteImport
+      parentRoute: typeof RiderRouteRoute
+    }
+    '/rider/dashboard': {
+      id: '/rider/dashboard'
+      path: '/dashboard'
+      fullPath: '/rider/dashboard'
+      preLoaderRoute: typeof RiderDashboardRouteImport
+      parentRoute: typeof RiderRouteRoute
+    }
   }
 }
 
+interface RiderRouteRouteChildren {
+  RiderDashboardRoute: typeof RiderDashboardRoute
+  RiderEarningsRoute: typeof RiderEarningsRoute
+  RiderProfileRoute: typeof RiderProfileRoute
+  RiderIndexRoute: typeof RiderIndexRoute
+}
+
+const RiderRouteRouteChildren: RiderRouteRouteChildren = {
+  RiderDashboardRoute: RiderDashboardRoute,
+  RiderEarningsRoute: RiderEarningsRoute,
+  RiderProfileRoute: RiderProfileRoute,
+  RiderIndexRoute: RiderIndexRoute,
+}
+
+const RiderRouteRouteWithChildren = RiderRouteRoute._addFileChildren(
+  RiderRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  RiderRouteRoute: RiderRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   BottleExchangeRoute: BottleExchangeRoute,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
   OrdersRoute: OrdersRoute,
   PointsRoute: PointsRoute,
+  ProfileRoute: ProfileRoute,
+  RiderLoginRoute: RiderLoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
