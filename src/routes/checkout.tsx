@@ -55,6 +55,8 @@ function CheckoutPage() {
     try {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       console.log("Checkout session exists:", !!session);
+      console.log("Access token exists:", !!session?.access_token);
+      console.log("Token preview:", session?.access_token ? `${session.access_token.substring(0, 20)}...` : "none");
       if (sessionError || !session) {
         console.error("No valid session:", sessionError);
         toast.error("Please login again");
