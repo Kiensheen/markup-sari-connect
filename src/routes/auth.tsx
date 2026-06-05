@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { isRider } from "@/lib/rider-utils";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
@@ -31,10 +32,14 @@ function AuthPage() {
         if (error) throw error;
         toast.success("Account created! Check your email to verify.");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Welcome back!");
-        navigate({ to: "/" });
+        if (data.user && await isRider(data.user.id)) {
+          navigate({ to: "/rider/dashboard" });
+        } else {
+          navigate({ to: "/" });
+        }
       }
     } catch (err: any) {
       toast.error(err.message ?? "Something went wrong");

@@ -1,12 +1,19 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Package, Plus, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/lib/cart-context";
 import { PRODUCT_CATEGORIES } from "@/lib/constants";
+import { isRider } from "@/lib/rider-utils";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({
+  beforeLoad: async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user && await isRider(session.user.id)) {
+      throw redirect({ to: "/rider/dashboard" });
+    }
+  },
   head: () => ({
     meta: [
       { title: "MarkUp — Shop wholesale" },

@@ -5,6 +5,7 @@ import {
   createRootRouteWithContext,
   HeadContent,
   Scripts,
+  useRouterState,
 } from "@tanstack/react-router";
 import { type ReactNode } from "react";
 
@@ -76,17 +77,24 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const { location } = useRouterState();
+  const isRiderApp = location.pathname.startsWith("/rider");
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <CartProvider>
-          <div className="min-h-screen bg-background pb-20 md:pb-0">
-            <AppHeader />
-            <BottomNav />
-            <main className="mx-auto max-w-3xl px-4 py-6">
-              <Outlet />
-            </main>
-          </div>
+          {isRiderApp ? (
+            <Outlet />
+          ) : (
+            <div className="min-h-screen bg-background pb-20 md:pb-0">
+              <AppHeader />
+              <BottomNav />
+              <main className="mx-auto max-w-3xl px-4 py-6">
+                <Outlet />
+              </main>
+            </div>
+          )}
           <Toaster />
         </CartProvider>
       </AuthProvider>
