@@ -49,7 +49,7 @@ function OrdersPage() {
       .select("id,status,total,delivery_fee,payment_method,delivery_address,notes,created_at,order_items(id,quantity,price,products(name))")
       .eq("consumer_id", user.id)
       .order("created_at", { ascending: false })
-      .then(({ data }) => { setOrders((data as Order[]) ?? []); setBusy(false); });
+      .then(({ data }) => { setOrders((data as unknown as Order[]) ?? []); setBusy(false); });
   }, [user]);
 
   if (loading || busy) return <p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>;

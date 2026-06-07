@@ -13,12 +13,4 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     detectSessionInUrl: true,
   },
-  global: {
-    headers: {
-      'apikey': supabaseAnonKey,
-    },
-  },
 })
-
-// Debug: log when client is created
-console.log('Supabase client initialized with URL:', supabaseUrl)
