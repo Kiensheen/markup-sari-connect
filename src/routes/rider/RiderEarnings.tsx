@@ -62,6 +62,8 @@ export function RiderEarnings() {
     setLoading(false);
   }, [user]);
 
+  useEffect(() => { load(); }, [load]);
+
   if (loading) {
     return <p className="py-16 text-center text-muted-foreground">Loading earnings…</p>;
   }
