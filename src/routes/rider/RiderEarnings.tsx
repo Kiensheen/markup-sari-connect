@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Calendar, TrendingUp, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -11,50 +11,58 @@ interface CompletedDelivery {
   delivery_address: string | null;
 }
 
-function isToday(dateStr: string) {
-  const d = new Date(dateStr);
-  const now = new Date();
-  return d.toDateString() === now.toDateString();
-}
-
-function isThisWeek(dateStr: string) {
-  const d = new Date(dateStr);
-  const now = new Date();
-  const start = new Date(now);
-  start.setDate(now.getDate() - now.getDay());
-  start.setHours(0, 0, 0, 0);
-  return d >= start;
-}
-
 export function RiderEarnings() {
   const { user } = useAuth();
   const [deliveries, setDeliveries] = useState<CompletedDelivery[]>([]);
+  const [todayEarnings, setTodayEarnings] = useState(0);
+  const [weekEarnings, setWeekEarnings] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const { data } = await supabase
+
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - 6);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    // Fetch today's earnings
+    const { data: todayData } = await supabase
+      .from("orders")
+      .select("delivery_fee")
+      .eq("rider_id", user.id)
+      .eq("status", "delivered")
+      .gte("created_at", startOfToday.toISOString());
+
+    const todaySum = (todayData ?? []).reduce((s, d) => s + Number(d.delivery_fee), 0);
+    setTodayEarnings(todaySum);
+
+    // Fetch this week's earnings (last 7 days)
+    const { data: weekData } = await supabase
+      .from("orders")
+      .select("delivery_fee")
+      .eq("rider_id", user.id)
+      .eq("status", "delivered")
+      .gte("created_at", startOfWeek.toISOString());
+
+    const weekSum = (weekData ?? []).reduce((s, d) => s + Number(d.delivery_fee), 0);
+    setWeekEarnings(weekSum);
+
+    // Fetch completed deliveries list
+    const { data: listData } = await supabase
       .from("orders")
       .select("id,delivery_fee,created_at,delivery_address")
       .eq("rider_id", user.id)
       .eq("status", "delivered")
       .order("created_at", { ascending: false });
-    setDeliveries((data as CompletedDelivery[]) ?? []);
+
+    setDeliveries((listData as CompletedDelivery[]) ?? []);
     setLoading(false);
   }, [user]);
 
   useEffect(() => { load(); }, [load]);
-
-  const todayEarnings = useMemo(
-    () => deliveries.filter((d) => isToday(d.created_at)).reduce((s, d) => s + Number(d.delivery_fee), 0),
-    [deliveries],
-  );
-
-  const weekEarnings = useMemo(
-    () => deliveries.filter((d) => isThisWeek(d.created_at)).reduce((s, d) => s + Number(d.delivery_fee), 0),
-    [deliveries],
-  );
 
   if (loading) {
     return <p className="py-16 text-center text-muted-foreground">Loading earnings…</p>;
