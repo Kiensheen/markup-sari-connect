@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { isRider } from "@/lib/rider-utils";
 
 export async function isAdmin(userId: string): Promise<boolean> {
   const { data } = await supabase
@@ -8,6 +9,12 @@ export async function isAdmin(userId: string): Promise<boolean> {
     .eq("role", "admin")
     .maybeSingle();
   return !!data;
+}
+
+/** Redirect path for authenticated non-admin users */
+export async function getNonAdminRedirect(userId: string): Promise<"/rider/dashboard" | "/"> {
+  if (await isRider(userId)) return "/rider/dashboard";
+  return "/";
 }
 
 export function peso(n: number | string | null | undefined) {
@@ -20,7 +27,7 @@ export function formatDate(d: string | Date) {
 }
 
 export const ORDER_STATUSES = ["pending", "confirmed", "assigned", "picked_up", "delivered", "cancelled"] as const;
-export type OrderStatus = typeof ORDER_STATUSES[number];
+export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 export const STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -30,6 +37,8 @@ export const STATUS_COLORS: Record<string, string> = {
   delivered: "bg-green-100 text-green-800",
   cancelled: "bg-red-100 text-red-800",
 };
+
+export const LOW_STOCK_THRESHOLD = 10;
 
 export function downloadCSV(filename: string, rows: Record<string, unknown>[]) {
   if (!rows.length) return;

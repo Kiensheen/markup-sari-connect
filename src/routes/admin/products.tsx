@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { peso } from "@/lib/admin-utils";
 import { Plus, Pencil, Trash2, Search, X } from "lucide-react";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/products")({
@@ -28,6 +29,8 @@ function AdminProducts() {
   const [cat, setCat] = useState("all");
   const [editing, setEditing] = useState<Partial<Product> | null>(null);
   const [loading, setLoading] = useState(true);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -69,11 +72,14 @@ function AdminProducts() {
     load();
   };
 
-  const remove = async (id: string) => {
-    if (!confirm("Delete this product?")) return;
-    const { error } = await supabase.from("products").delete().eq("id", id);
+  const remove = async () => {
+    if (!deleteId) return;
+    setDeleting(true);
+    const { error } = await supabase.from("products").delete().eq("id", deleteId);
+    setDeleting(false);
     if (error) { toast.error(error.message); return; }
-    toast.success("Deleted");
+    toast.success("Product deleted");
+    setDeleteId(null);
     load();
   };
 
@@ -81,7 +87,7 @@ function AdminProducts() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">Products</h1>
-        <button onClick={() => setEditing({})} className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800">
+        <button onClick={() => setEditing({})} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90">
           <Plus className="h-4 w-4" /> Add product
         </button>
       </div>
@@ -125,7 +131,7 @@ function AdminProducts() {
                 <td className="px-4 py-3"><span className={p.stock === 0 ? "text-red-600 font-medium" : p.stock < 10 ? "text-yellow-600 font-medium" : ""}>{p.stock}</span></td>
                 <td className="px-4 py-3 flex gap-2">
                   <button onClick={() => setEditing(p)} className="text-blue-600 hover:text-blue-800"><Pencil className="h-4 w-4" /></button>
-                  <button onClick={() => remove(p.id)} className="text-red-600 hover:text-red-800"><Trash2 className="h-4 w-4" /></button>
+                  <button onClick={() => setDeleteId(p.id)} className="text-red-600 hover:text-red-800"><Trash2 className="h-4 w-4" /></button>
                 </td>
               </tr>
             ))}
@@ -155,11 +161,22 @@ function AdminProducts() {
               </div>
               <Field label="Stock"><input type="number" className={inp} value={editing.stock ?? ""} onChange={(e) => setEditing({ ...editing, stock: Number(e.target.value) })} /></Field>
               <Field label="Image URL"><input className={inp} value={editing.image_url ?? ""} onChange={(e) => setEditing({ ...editing, image_url: e.target.value })} /></Field>
-              <button onClick={save} className="w-full rounded-lg bg-slate-900 py-2.5 font-semibold text-white hover:bg-slate-800">Save</button>
+              <button onClick={save} className="w-full rounded-lg bg-primary py-2.5 font-semibold text-primary-foreground hover:bg-primary/90">Save</button>
             </div>
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!deleteId}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+        title="Delete product?"
+        description="This action cannot be undone. The product will be permanently removed."
+        confirmLabel="Delete"
+        destructive
+        loading={deleting}
+        onConfirm={remove}
+      />
     </div>
   );
 }

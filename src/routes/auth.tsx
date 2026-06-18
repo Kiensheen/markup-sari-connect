@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { isAdmin } from "@/lib/admin-utils";
 import { isRider } from "@/lib/rider-utils";
 import { toast } from "sonner";
 
@@ -35,7 +36,9 @@ function AuthPage() {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Welcome back!");
-        if (data.user && await isRider(data.user.id)) {
+        if (data.user && await isAdmin(data.user.id)) {
+          navigate({ to: "/admin/dashboard" });
+        } else if (data.user && await isRider(data.user.id)) {
           navigate({ to: "/rider/dashboard" });
         } else {
           navigate({ to: "/" });
