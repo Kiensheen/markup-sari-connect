@@ -86,7 +86,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <CartProvider>
-          {isRiderApp ? (
+          {isBareApp ? (
             <Outlet />
           ) : (
             <div className="min-h-screen bg-background pb-20 md:pb-0">
