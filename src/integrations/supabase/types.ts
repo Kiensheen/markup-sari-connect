@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       bottle_exchanges: {
         Row: {
           created_at: string
@@ -191,6 +209,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          is_blocked: boolean
           name: string | null
           phone: string | null
           points_balance: number
@@ -201,6 +220,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id: string
+          is_blocked?: boolean
           name?: string | null
           phone?: string | null
           points_balance?: number
@@ -211,6 +231,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          is_blocked?: boolean
           name?: string | null
           phone?: string | null
           points_balance?: number
@@ -241,6 +262,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_adjust_points: {
+        Args: { _delta: number; _note: string; _user_id: string }
+        Returns: undefined
+      }
       award_order_points: { Args: { _order_id: string }; Returns: number }
       has_role: {
         Args: {
