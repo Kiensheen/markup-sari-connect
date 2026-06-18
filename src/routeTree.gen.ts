@@ -25,6 +25,7 @@ import { Route as RiderLoginRouteImport } from './routes/rider_.login'
 import { Route as RiderProfileRouteImport } from './routes/rider/profile'
 import { Route as RiderEarningsRouteImport } from './routes/rider/earnings'
 import { Route as RiderDashboardRouteImport } from './routes/rider/dashboard'
+import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AdminLoginRouteImport } from './routes/admin_.login'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminRidersRouteImport } from './routes/admin/riders'
@@ -116,6 +117,11 @@ const RiderDashboardRoute = RiderDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => RiderRouteRoute,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/admin_/login',
   path: '/admin/login',
@@ -171,7 +177,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
   '/rider': typeof RiderRouteRouteWithChildren
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/bottle-exchange': typeof BottleExchangeRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
@@ -188,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/admin/riders': typeof AdminRidersRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/rider/dashboard': typeof RiderDashboardRoute
   '/rider/earnings': typeof RiderEarningsRoute
   '/rider/profile': typeof RiderProfileRoute
@@ -197,7 +204,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/bottle-exchange': typeof BottleExchangeRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
@@ -214,6 +221,7 @@ export interface FileRoutesByTo {
   '/admin/riders': typeof AdminRidersRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/rider/dashboard': typeof RiderDashboardRoute
   '/rider/earnings': typeof RiderEarningsRoute
   '/rider/profile': typeof RiderProfileRoute
@@ -226,7 +234,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
   '/rider': typeof RiderRouteRouteWithChildren
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/bottle-exchange': typeof BottleExchangeRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
@@ -243,6 +251,7 @@ export interface FileRoutesById {
   '/admin/riders': typeof AdminRidersRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin_/login': typeof AdminLoginRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/rider/dashboard': typeof RiderDashboardRoute
   '/rider/earnings': typeof RiderEarningsRoute
   '/rider/profile': typeof RiderProfileRoute
@@ -273,6 +282,7 @@ export interface FileRouteTypes {
     | '/admin/riders'
     | '/admin/settings'
     | '/admin/login'
+    | '/auth/callback'
     | '/rider/dashboard'
     | '/rider/earnings'
     | '/rider/profile'
@@ -299,6 +309,7 @@ export interface FileRouteTypes {
     | '/admin/riders'
     | '/admin/settings'
     | '/admin/login'
+    | '/auth/callback'
     | '/rider/dashboard'
     | '/rider/earnings'
     | '/rider/profile'
@@ -327,6 +338,7 @@ export interface FileRouteTypes {
     | '/admin/riders'
     | '/admin/settings'
     | '/admin_/login'
+    | '/auth/callback'
     | '/rider/dashboard'
     | '/rider/earnings'
     | '/rider/profile'
@@ -339,7 +351,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   RiderRouteRoute: typeof RiderRouteRouteWithChildren
-  AuthRoute: typeof AuthRoute
+  AuthRoute: typeof AuthRouteWithChildren
   BottleExchangeRoute: typeof BottleExchangeRoute
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
@@ -464,6 +476,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RiderDashboardRouteImport
       parentRoute: typeof RiderRouteRoute
     }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/admin_/login': {
       id: '/admin_/login'
       path: '/admin/login'
@@ -585,11 +604,21 @@ const RiderRouteRouteWithChildren = RiderRouteRoute._addFileChildren(
   RiderRouteRouteChildren,
 )
 
+interface AuthRouteChildren {
+  AuthCallbackRoute: typeof AuthCallbackRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthCallbackRoute: AuthCallbackRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRouteRoute: AdminRouteRouteWithChildren,
   RiderRouteRoute: RiderRouteRouteWithChildren,
-  AuthRoute: AuthRoute,
+  AuthRoute: AuthRouteWithChildren,
   BottleExchangeRoute: BottleExchangeRoute,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
@@ -602,3 +631,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
