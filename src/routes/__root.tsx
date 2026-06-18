@@ -79,12 +79,14 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const { location } = useRouterState();
   const isRiderApp = location.pathname.startsWith("/rider");
+  const isAdminApp = location.pathname.startsWith("/admin");
+  const isBareApp = isRiderApp || isAdminApp;
 
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <CartProvider>
-          {isRiderApp ? (
+          {isBareApp ? (
             <Outlet />
           ) : (
             <div className="min-h-screen bg-background pb-20 md:pb-0">

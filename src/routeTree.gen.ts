@@ -17,12 +17,24 @@ import { Route as CartRouteImport } from './routes/cart'
 import { Route as BottleExchangeRouteImport } from './routes/bottle-exchange'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as RiderRouteRouteImport } from './routes/rider/route'
+import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RiderIndexRouteImport } from './routes/rider/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as RiderLoginRouteImport } from './routes/rider_.login'
 import { Route as RiderProfileRouteImport } from './routes/rider/profile'
 import { Route as RiderEarningsRouteImport } from './routes/rider/earnings'
 import { Route as RiderDashboardRouteImport } from './routes/rider/dashboard'
+import { Route as AdminLoginRouteImport } from './routes/admin_.login'
+import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
+import { Route as AdminRidersRouteImport } from './routes/admin/riders'
+import { Route as AdminReportsRouteImport } from './routes/admin/reports'
+import { Route as AdminProductsRouteImport } from './routes/admin/products'
+import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
+import { Route as AdminInventoryRouteImport } from './routes/admin/inventory'
+import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
+import { Route as AdminConsumersRouteImport } from './routes/admin/consumers'
+import { Route as AdminBottlesRouteImport } from './routes/admin/bottles'
 
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
@@ -64,6 +76,11 @@ const RiderRouteRoute = RiderRouteRouteImport.update({
   path: '/rider',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRouteRoute = AdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -73,6 +90,11 @@ const RiderIndexRoute = RiderIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => RiderRouteRoute,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const RiderLoginRoute = RiderLoginRouteImport.update({
   id: '/rider_/login',
@@ -94,9 +116,60 @@ const RiderDashboardRoute = RiderDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => RiderRouteRoute,
 } as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin_/login',
+  path: '/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminRidersRoute = AdminRidersRouteImport.update({
+  id: '/riders',
+  path: '/riders',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminReportsRoute = AdminReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminProductsRoute = AdminProductsRouteImport.update({
+  id: '/products',
+  path: '/products',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminOrdersRoute = AdminOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminInventoryRoute = AdminInventoryRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminConsumersRoute = AdminConsumersRouteImport.update({
+  id: '/consumers',
+  path: '/consumers',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminBottlesRoute = AdminBottlesRouteImport.update({
+  id: '/bottles',
+  path: '/bottles',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteRouteWithChildren
   '/rider': typeof RiderRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/bottle-exchange': typeof BottleExchangeRoute
@@ -105,10 +178,21 @@ export interface FileRoutesByFullPath {
   '/orders': typeof OrdersRoute
   '/points': typeof PointsRoute
   '/profile': typeof ProfileRoute
+  '/admin/bottles': typeof AdminBottlesRoute
+  '/admin/consumers': typeof AdminConsumersRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/orders': typeof AdminOrdersRoute
+  '/admin/products': typeof AdminProductsRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/riders': typeof AdminRidersRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/login': typeof AdminLoginRoute
   '/rider/dashboard': typeof RiderDashboardRoute
   '/rider/earnings': typeof RiderEarningsRoute
   '/rider/profile': typeof RiderProfileRoute
   '/rider/login': typeof RiderLoginRoute
+  '/admin/': typeof AdminIndexRoute
   '/rider/': typeof RiderIndexRoute
 }
 export interface FileRoutesByTo {
@@ -120,15 +204,27 @@ export interface FileRoutesByTo {
   '/orders': typeof OrdersRoute
   '/points': typeof PointsRoute
   '/profile': typeof ProfileRoute
+  '/admin/bottles': typeof AdminBottlesRoute
+  '/admin/consumers': typeof AdminConsumersRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/orders': typeof AdminOrdersRoute
+  '/admin/products': typeof AdminProductsRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/riders': typeof AdminRidersRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/login': typeof AdminLoginRoute
   '/rider/dashboard': typeof RiderDashboardRoute
   '/rider/earnings': typeof RiderEarningsRoute
   '/rider/profile': typeof RiderProfileRoute
   '/rider/login': typeof RiderLoginRoute
+  '/admin': typeof AdminIndexRoute
   '/rider': typeof RiderIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteRouteWithChildren
   '/rider': typeof RiderRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/bottle-exchange': typeof BottleExchangeRoute
@@ -137,16 +233,28 @@ export interface FileRoutesById {
   '/orders': typeof OrdersRoute
   '/points': typeof PointsRoute
   '/profile': typeof ProfileRoute
+  '/admin/bottles': typeof AdminBottlesRoute
+  '/admin/consumers': typeof AdminConsumersRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/orders': typeof AdminOrdersRoute
+  '/admin/products': typeof AdminProductsRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/riders': typeof AdminRidersRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin_/login': typeof AdminLoginRoute
   '/rider/dashboard': typeof RiderDashboardRoute
   '/rider/earnings': typeof RiderEarningsRoute
   '/rider/profile': typeof RiderProfileRoute
   '/rider_/login': typeof RiderLoginRoute
+  '/admin/': typeof AdminIndexRoute
   '/rider/': typeof RiderIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/rider'
     | '/auth'
     | '/bottle-exchange'
@@ -155,10 +263,21 @@ export interface FileRouteTypes {
     | '/orders'
     | '/points'
     | '/profile'
+    | '/admin/bottles'
+    | '/admin/consumers'
+    | '/admin/dashboard'
+    | '/admin/inventory'
+    | '/admin/orders'
+    | '/admin/products'
+    | '/admin/reports'
+    | '/admin/riders'
+    | '/admin/settings'
+    | '/admin/login'
     | '/rider/dashboard'
     | '/rider/earnings'
     | '/rider/profile'
     | '/rider/login'
+    | '/admin/'
     | '/rider/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -170,14 +289,26 @@ export interface FileRouteTypes {
     | '/orders'
     | '/points'
     | '/profile'
+    | '/admin/bottles'
+    | '/admin/consumers'
+    | '/admin/dashboard'
+    | '/admin/inventory'
+    | '/admin/orders'
+    | '/admin/products'
+    | '/admin/reports'
+    | '/admin/riders'
+    | '/admin/settings'
+    | '/admin/login'
     | '/rider/dashboard'
     | '/rider/earnings'
     | '/rider/profile'
     | '/rider/login'
+    | '/admin'
     | '/rider'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/rider'
     | '/auth'
     | '/bottle-exchange'
@@ -186,15 +317,27 @@ export interface FileRouteTypes {
     | '/orders'
     | '/points'
     | '/profile'
+    | '/admin/bottles'
+    | '/admin/consumers'
+    | '/admin/dashboard'
+    | '/admin/inventory'
+    | '/admin/orders'
+    | '/admin/products'
+    | '/admin/reports'
+    | '/admin/riders'
+    | '/admin/settings'
+    | '/admin_/login'
     | '/rider/dashboard'
     | '/rider/earnings'
     | '/rider/profile'
     | '/rider_/login'
+    | '/admin/'
     | '/rider/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRouteRoute: typeof AdminRouteRouteWithChildren
   RiderRouteRoute: typeof RiderRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   BottleExchangeRoute: typeof BottleExchangeRoute
@@ -203,6 +346,7 @@ export interface RootRouteChildren {
   OrdersRoute: typeof OrdersRoute
   PointsRoute: typeof PointsRoute
   ProfileRoute: typeof ProfileRoute
+  AdminLoginRoute: typeof AdminLoginRoute
   RiderLoginRoute: typeof RiderLoginRoute
 }
 
@@ -264,6 +408,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RiderRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -277,6 +428,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/rider/'
       preLoaderRoute: typeof RiderIndexRouteImport
       parentRoute: typeof RiderRouteRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
     '/rider_/login': {
       id: '/rider_/login'
@@ -306,8 +464,108 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RiderDashboardRouteImport
       parentRoute: typeof RiderRouteRoute
     }
+    '/admin_/login': {
+      id: '/admin_/login'
+      path: '/admin/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/riders': {
+      id: '/admin/riders'
+      path: '/riders'
+      fullPath: '/admin/riders'
+      preLoaderRoute: typeof AdminRidersRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/reports': {
+      id: '/admin/reports'
+      path: '/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AdminReportsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/products': {
+      id: '/admin/products'
+      path: '/products'
+      fullPath: '/admin/products'
+      preLoaderRoute: typeof AdminProductsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/orders': {
+      id: '/admin/orders'
+      path: '/orders'
+      fullPath: '/admin/orders'
+      preLoaderRoute: typeof AdminOrdersRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/inventory': {
+      id: '/admin/inventory'
+      path: '/inventory'
+      fullPath: '/admin/inventory'
+      preLoaderRoute: typeof AdminInventoryRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/dashboard': {
+      id: '/admin/dashboard'
+      path: '/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/consumers': {
+      id: '/admin/consumers'
+      path: '/consumers'
+      fullPath: '/admin/consumers'
+      preLoaderRoute: typeof AdminConsumersRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/bottles': {
+      id: '/admin/bottles'
+      path: '/bottles'
+      fullPath: '/admin/bottles'
+      preLoaderRoute: typeof AdminBottlesRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
   }
 }
+
+interface AdminRouteRouteChildren {
+  AdminBottlesRoute: typeof AdminBottlesRoute
+  AdminConsumersRoute: typeof AdminConsumersRoute
+  AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminInventoryRoute: typeof AdminInventoryRoute
+  AdminOrdersRoute: typeof AdminOrdersRoute
+  AdminProductsRoute: typeof AdminProductsRoute
+  AdminReportsRoute: typeof AdminReportsRoute
+  AdminRidersRoute: typeof AdminRidersRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminBottlesRoute: AdminBottlesRoute,
+  AdminConsumersRoute: AdminConsumersRoute,
+  AdminDashboardRoute: AdminDashboardRoute,
+  AdminInventoryRoute: AdminInventoryRoute,
+  AdminOrdersRoute: AdminOrdersRoute,
+  AdminProductsRoute: AdminProductsRoute,
+  AdminReportsRoute: AdminReportsRoute,
+  AdminRidersRoute: AdminRidersRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
+  AdminRouteRouteChildren,
+)
 
 interface RiderRouteRouteChildren {
   RiderDashboardRoute: typeof RiderDashboardRoute
@@ -329,6 +587,7 @@ const RiderRouteRouteWithChildren = RiderRouteRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRouteRoute: AdminRouteRouteWithChildren,
   RiderRouteRoute: RiderRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   BottleExchangeRoute: BottleExchangeRoute,
@@ -337,18 +596,9 @@ const rootRouteChildren: RootRouteChildren = {
   OrdersRoute: OrdersRoute,
   PointsRoute: PointsRoute,
   ProfileRoute: ProfileRoute,
+  AdminLoginRoute: AdminLoginRoute,
   RiderLoginRoute: RiderLoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
