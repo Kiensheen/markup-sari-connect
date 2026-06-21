@@ -32,6 +32,13 @@ interface Profile {
   phone: string | null;
   address: string | null;
   points_balance: number;
+  first_name?: string | null;
+  middle_name?: string | null;
+  last_name?: string | null;
+  province?: string | null;
+  city?: string | null;
+  barangay?: string | null;
+  street?: string | null;
 }
 
 function ProfilePage() {
@@ -58,10 +65,21 @@ function ProfilePage() {
     if (!user) return;
     const { data: prof } = await supabase
       .from("profiles")
-      .select("name,email,phone,address,points_balance")
+      .select("name,email,phone,address,points_balance,first_name,middle_name,last_name,province,city,barangay,street")
       .eq("id", user.id)
       .maybeSingle();
-    setProfile(prof as Profile | null);
+    const p = prof as Profile | null;
+    setProfile(p);
+    if (p) {
+      setEditFirstName(p.first_name ?? "");
+      setEditMiddleName(p.middle_name ?? "");
+      setEditLastName(p.last_name ?? "");
+      setEditPhone(p.phone ?? "");
+      setEditProvince(p.province ?? "");
+      setEditCity(p.city ?? "");
+      setEditBarangay(p.barangay ?? "");
+      setEditStreet(p.street ?? "");
+    }
     const { data } = await supabase
       .from("points_transactions")
       .select("*")
@@ -72,6 +90,36 @@ function ProfilePage() {
   };
 
   useEffect(() => { refresh(); }, [user]);
+
+  const saveProfile = async () => {
+    if (!user) return;
+    if (!editFirstName.trim() || !editLastName.trim() || !editPhone.trim()) {
+      toast.error("First name, last name, and phone are required");
+      return;
+    }
+    setSaveBusy(true);
+    const fullName = [editFirstName, editMiddleName, editLastName].filter(Boolean).join(" ").trim();
+    const address = [editStreet, editBarangay, editCity, editProvince].filter(Boolean).join(", ");
+    const updates: Record<string, unknown> = {
+      first_name: editFirstName.trim(),
+      middle_name: editMiddleName.trim() || null,
+      last_name: editLastName.trim(),
+      phone: editPhone.trim(),
+      province: editProvince.trim() || null,
+      city: editCity.trim() || null,
+      barangay: editBarangay.trim() || null,
+      street: editStreet.trim() || null,
+      name: fullName,
+      address: address || null,
+    };
+    const { error } = await supabase.from("profiles").update(updates).eq("id", user.id);
+    setSaveBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Profile updated successfully");
+    setEditMode(false);
+    refresh();
+  };
+
 
   const handleRedeem = async () => {
     if (!user || !profile) return;
