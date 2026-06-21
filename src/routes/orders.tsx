@@ -308,6 +308,24 @@ const [orders, setOrders] = useState<Order[]>([]);
                           </Button>
                         </div>
                       )}
+                      {o.status === "delivered" && (
+                        <div className="mt-3">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            type="button"
+                            disabled={receiptBusyId === o.id}
+                            onClick={async () => {
+                              setReceiptBusyId(o.id);
+                              try { await generateReceipt(o); } catch (e) {
+                                toast.error(e instanceof Error ? e.message : "Failed to generate receipt");
+                              } finally { setReceiptBusyId(null); }
+                            }}
+                          >
+                            {receiptBusyId === o.id ? "Generating…" : "Download Receipt"}
+                          </Button>
+                        </div>
+                      )}
 
                     </div>
 
