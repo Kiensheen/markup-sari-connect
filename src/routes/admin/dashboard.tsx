@@ -98,7 +98,7 @@ function AdminDashboard() {
   return (
     <div>
       <h1 className="mb-1 text-2xl font-bold">📊 Dashboard</h1>
-      <p className="mb-6 text-sm text-muted-foreground">Overview of your MarkUp platform</p>
+      <p className="mb-6 text-sm text-muted-foreground">Overview of your MarketUp platform</p>
 
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
