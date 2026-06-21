@@ -32,6 +32,13 @@ interface Profile {
   phone: string | null;
   address: string | null;
   points_balance: number;
+  first_name?: string | null;
+  middle_name?: string | null;
+  last_name?: string | null;
+  province?: string | null;
+  city?: string | null;
+  barangay?: string | null;
+  street?: string | null;
 }
 
 function ProfilePage() {
@@ -58,10 +65,21 @@ function ProfilePage() {
     if (!user) return;
     const { data: prof } = await supabase
       .from("profiles")
-      .select("name,email,phone,address,points_balance")
+      .select("name,email,phone,address,points_balance,first_name,middle_name,last_name,province,city,barangay,street")
       .eq("id", user.id)
       .maybeSingle();
-    setProfile(prof as Profile | null);
+    const p = prof as Profile | null;
+    setProfile(p);
+    if (p) {
+      setEditFirstName(p.first_name ?? "");
+      setEditMiddleName(p.middle_name ?? "");
+      setEditLastName(p.last_name ?? "");
+      setEditPhone(p.phone ?? "");
+      setEditProvince(p.province ?? "");
+      setEditCity(p.city ?? "");
+      setEditBarangay(p.barangay ?? "");
+      setEditStreet(p.street ?? "");
+    }
     const { data } = await supabase
       .from("points_transactions")
       .select("*")
@@ -72,6 +90,36 @@ function ProfilePage() {
   };
 
   useEffect(() => { refresh(); }, [user]);
+
+  const saveProfile = async () => {
+    if (!user) return;
+    if (!editFirstName.trim() || !editLastName.trim() || !editPhone.trim()) {
+      toast.error("First name, last name, and phone are required");
+      return;
+    }
+    setSaveBusy(true);
+    const fullName = [editFirstName, editMiddleName, editLastName].filter(Boolean).join(" ").trim();
+    const address = [editStreet, editBarangay, editCity, editProvince].filter(Boolean).join(", ");
+    const updates: Record<string, unknown> = {
+      first_name: editFirstName.trim(),
+      middle_name: editMiddleName.trim() || null,
+      last_name: editLastName.trim(),
+      phone: editPhone.trim(),
+      province: editProvince.trim() || null,
+      city: editCity.trim() || null,
+      barangay: editBarangay.trim() || null,
+      street: editStreet.trim() || null,
+      name: fullName,
+      address: address || null,
+    };
+    const { error } = await supabase.from("profiles").update(updates).eq("id", user.id);
+    setSaveBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Profile updated successfully");
+    setEditMode(false);
+    refresh();
+  };
+
 
   const handleRedeem = async () => {
     if (!user || !profile) return;
@@ -138,15 +186,70 @@ function ProfilePage() {
       </div>
 
       <section className="rounded-xl border border-border bg-card p-4">
-        <h2 className="mb-3 flex items-center gap-2 font-semibold">
-          <UserIcon className="h-4 w-4 text-primary" /> Account details
-        </h2>
-        <dl className="space-y-2 text-sm">
-          <div className="flex justify-between gap-4">
-            <dt className="text-muted-foreground">Address</dt>
-            <dd className="text-right">{profile?.address ?? "Not set"}</dd>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 font-semibold">
+            <UserIcon className="h-4 w-4 text-primary" /> Account details
+          </h2>
+          {!editMode ? (
+            <button
+              type="button"
+              onClick={() => setEditMode(true)}
+              className="rounded-md border border-border px-3 py-1 text-xs font-medium hover:bg-muted"
+            >
+              Edit
+            </button>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => { setEditMode(false); refresh(); }}
+                className="rounded-md border border-border px-3 py-1 text-xs font-medium hover:bg-muted"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={saveBusy}
+                onClick={saveProfile}
+                className="rounded-md bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+              >
+                {saveBusy ? "Saving…" : "Save"}
+              </button>
+            </div>
+          )}
+        </div>
+        {!editMode ? (
+          <dl className="space-y-2 text-sm">
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">Name</dt>
+              <dd className="text-right">{[profile?.first_name, profile?.middle_name, profile?.last_name].filter(Boolean).join(" ") || profile?.name || "Not set"}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">Phone</dt>
+              <dd className="text-right">{profile?.phone ?? "Not set"}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">Address</dt>
+              <dd className="text-right">{profile?.address ?? "Not set"}</dd>
+            </div>
+          </dl>
+        ) : (
+          <div className="space-y-2 text-sm">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <input value={editFirstName} onChange={(e) => setEditFirstName(e.target.value)} placeholder="First name *" className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <input value={editMiddleName} onChange={(e) => setEditMiddleName(e.target.value)} placeholder="Middle name" className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <input value={editLastName} onChange={(e) => setEditLastName(e.target.value)} placeholder="Last name *" className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+            </div>
+            <input type="tel" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} placeholder="Phone *" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <input value={editProvince} onChange={(e) => setEditProvince(e.target.value)} placeholder="Province" className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <input value={editCity} onChange={(e) => setEditCity(e.target.value)} placeholder="City" className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <input value={editBarangay} onChange={(e) => setEditBarangay(e.target.value)} placeholder="Barangay" className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <input value={editStreet} onChange={(e) => setEditStreet(e.target.value)} placeholder="Street" className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+            </div>
+            <p className="text-xs text-muted-foreground">* required</p>
           </div>
-        </dl>
+        )}
       </section>
 
       <section>

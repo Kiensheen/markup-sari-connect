@@ -206,35 +206,62 @@ export type Database = {
       profiles: {
         Row: {
           address: string | null
+          avatar_url: string | null
+          barangay: string | null
+          blocked_until: string | null
+          city: string | null
           created_at: string
           email: string | null
+          first_name: string | null
           id: string
           is_blocked: boolean
+          last_name: string | null
+          middle_name: string | null
           name: string | null
           phone: string | null
           points_balance: number
+          province: string | null
+          street: string | null
           updated_at: string
         }
         Insert: {
           address?: string | null
+          avatar_url?: string | null
+          barangay?: string | null
+          blocked_until?: string | null
+          city?: string | null
           created_at?: string
           email?: string | null
+          first_name?: string | null
           id: string
           is_blocked?: boolean
+          last_name?: string | null
+          middle_name?: string | null
           name?: string | null
           phone?: string | null
           points_balance?: number
+          province?: string | null
+          street?: string | null
           updated_at?: string
         }
         Update: {
           address?: string | null
+          avatar_url?: string | null
+          barangay?: string | null
+          blocked_until?: string | null
+          city?: string | null
           created_at?: string
           email?: string | null
+          first_name?: string | null
           id?: string
           is_blocked?: boolean
+          last_name?: string | null
+          middle_name?: string | null
           name?: string | null
           phone?: string | null
           points_balance?: number
+          province?: string | null
+          street?: string | null
           updated_at?: string
         }
         Relationships: []

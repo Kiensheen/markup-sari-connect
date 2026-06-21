@@ -75,7 +75,7 @@ function AuthPage() {
       <div className="text-center">
         <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-2xl font-bold text-primary-foreground shadow-lg">M</div>
         <h1 className="text-2xl font-bold">{mode === "signin" ? "Welcome back" : "Create your account"}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{mode === "signin" ? "Sign in to keep stocking up" : "Join MarkUp and shop wholesale"}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{mode === "signin" ? "Sign in to keep stocking up" : "Join MarketUp and shop wholesale"}</p>
       </div>
 
       <form onSubmit={submit} className="space-y-3">
