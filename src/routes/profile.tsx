@@ -186,15 +186,70 @@ function ProfilePage() {
       </div>
 
       <section className="rounded-xl border border-border bg-card p-4">
-        <h2 className="mb-3 flex items-center gap-2 font-semibold">
-          <UserIcon className="h-4 w-4 text-primary" /> Account details
-        </h2>
-        <dl className="space-y-2 text-sm">
-          <div className="flex justify-between gap-4">
-            <dt className="text-muted-foreground">Address</dt>
-            <dd className="text-right">{profile?.address ?? "Not set"}</dd>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 font-semibold">
+            <UserIcon className="h-4 w-4 text-primary" /> Account details
+          </h2>
+          {!editMode ? (
+            <button
+              type="button"
+              onClick={() => setEditMode(true)}
+              className="rounded-md border border-border px-3 py-1 text-xs font-medium hover:bg-muted"
+            >
+              Edit
+            </button>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => { setEditMode(false); refresh(); }}
+                className="rounded-md border border-border px-3 py-1 text-xs font-medium hover:bg-muted"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={saveBusy}
+                onClick={saveProfile}
+                className="rounded-md bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+              >
+                {saveBusy ? "Saving…" : "Save"}
+              </button>
+            </div>
+          )}
+        </div>
+        {!editMode ? (
+          <dl className="space-y-2 text-sm">
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">Name</dt>
+              <dd className="text-right">{[profile?.first_name, profile?.middle_name, profile?.last_name].filter(Boolean).join(" ") || profile?.name || "Not set"}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">Phone</dt>
+              <dd className="text-right">{profile?.phone ?? "Not set"}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">Address</dt>
+              <dd className="text-right">{profile?.address ?? "Not set"}</dd>
+            </div>
+          </dl>
+        ) : (
+          <div className="space-y-2 text-sm">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <input value={editFirstName} onChange={(e) => setEditFirstName(e.target.value)} placeholder="First name *" className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <input value={editMiddleName} onChange={(e) => setEditMiddleName(e.target.value)} placeholder="Middle name" className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <input value={editLastName} onChange={(e) => setEditLastName(e.target.value)} placeholder="Last name *" className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+            </div>
+            <input type="tel" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} placeholder="Phone *" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <input value={editProvince} onChange={(e) => setEditProvince(e.target.value)} placeholder="Province" className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <input value={editCity} onChange={(e) => setEditCity(e.target.value)} placeholder="City" className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <input value={editBarangay} onChange={(e) => setEditBarangay(e.target.value)} placeholder="Barangay" className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <input value={editStreet} onChange={(e) => setEditStreet(e.target.value)} placeholder="Street" className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+            </div>
+            <p className="text-xs text-muted-foreground">* required</p>
           </div>
-        </dl>
+        )}
       </section>
 
       <section>
