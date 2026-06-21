@@ -19,8 +19,9 @@ export const ORDER_STAGES = [
 export const ORDER_STATUS_STEP: Record<string, number> = {
   pending: 0,
   confirmed: 0,
-  assigned: 1,
-  picked_up: 2,
+  assigned: 0,
+  picked_up: 1,
+  out_for_delivery: 2,
   delivered: 3,
   cancelled: -1,
 };
