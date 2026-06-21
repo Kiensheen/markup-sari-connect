@@ -49,11 +49,13 @@ export function DialogTrigger({ children }: { children: React.ReactNode }) {
 
 export function DialogContent({
   children,
+  className,
 }: {
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <div className="rounded-2xl bg-card p-6 shadow-xl">{children}</div>
+    <div className={`rounded-2xl bg-card p-6 shadow-xl ${className ?? ""}`}>{children}</div>
   );
 }
 
