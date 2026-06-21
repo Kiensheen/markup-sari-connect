@@ -18,6 +18,7 @@ function AdminLogin() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +44,18 @@ function AdminLogin() {
         return;
       }
 
+      if (data.session) {
+        if (rememberMe) {
+          localStorage.setItem("marketup_remember_me", "1");
+          localStorage.setItem("marketup_remember_me_at", String(Date.now() + 1000 * 60 * 60 * 24 * 30));
+        } else {
+          localStorage.removeItem("marketup_remember_me");
+          localStorage.removeItem("marketup_remember_me_at");
+        }
+      }
+
       toast.success("Welcome, admin!");
+
       console.log("[admin login] redirecting to /admin/dashboard");
       navigate({ to: "/admin/dashboard" });
     } catch (err: unknown) {
@@ -62,7 +74,7 @@ function AdminLogin() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
             <ShieldCheck className="h-8 w-8" />
           </div>
-          <h1 className="text-2xl font-bold">MarkUp Admin</h1>
+          <h1 className="text-2xl font-bold">MarketUp Admin</h1>
           <p className="mt-1 text-sm text-muted-foreground">Sign in to manage the platform</p>
         </div>
         {error && (
@@ -79,7 +91,19 @@ function AdminLogin() {
           <form onSubmit={submit} className="space-y-4">
             <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="h-11" />
             <Input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" className="h-11" />
+
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4 accent-primary"
+              />
+              Remember Me
+            </label>
+
             <Button type="submit" disabled={busy} className="h-11 w-full">
+
               {busy ? "Signing in…" : "Sign in"}
             </Button>
           </form>

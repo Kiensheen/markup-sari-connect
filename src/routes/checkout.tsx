@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Recycle } from "lucide-react";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
@@ -19,7 +19,7 @@ function CheckoutPage() {
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [payment, setPayment] = useState<"cod" | "online">("cod");
-  const [bottleExchange, setBottleExchange] = useState(false);
+
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -75,12 +75,17 @@ function CheckoutPage() {
         delivery_address: address,
         payment_method: payment,
         status: "pending" as const,
-        notes: bottleExchange ? "Bottle-to-bottle exchange requested" : null,
+        notes: null,
+
       };
+
+
 
       console.log("Checkout insert payload:", orderData);
 
+
       const { data: order, error } = await supabase
+
         .from("orders")
         .insert(orderData)
         .select()
@@ -175,26 +180,7 @@ function CheckoutPage() {
         </label>
       </section>
 
-      <section className="rounded-xl border border-border bg-card p-4">
-        <label className="flex cursor-pointer items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-primary-soft p-2 text-primary"><Recycle className="h-5 w-5" /></div>
-            <div>
-              <p className="text-sm font-semibold">Bottle-to-bottle exchange</p>
-              <p className="text-xs text-muted-foreground">Return empty bottles when your order is delivered</p>
-            </div>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={bottleExchange}
-            onClick={() => setBottleExchange((v) => !v)}
-            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${bottleExchange ? "bg-primary" : "bg-muted"}`}
-          >
-            <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${bottleExchange ? "translate-x-5" : ""}`} />
-          </button>
-        </label>
-      </section>
+
 
       <button disabled={busy} type="submit" className="w-full rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
         {busy ? "Placing order…" : "Place Order"}

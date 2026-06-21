@@ -24,9 +24,9 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur">
       <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
-        <Link to="/" className="flex items-center gap-2">
+<Link to="/" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-bold text-primary-foreground">M</div>
-          <span className="text-lg font-bold tracking-tight">MarkUp</span>
+          <span className="text-lg font-bold tracking-tight">MarketUp</span>
         </Link>
         <div className="flex items-center gap-2">
           {user && points !== null && (

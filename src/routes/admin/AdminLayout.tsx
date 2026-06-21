@@ -16,8 +16,9 @@ const links = [
   { to: "/admin/inventory", label: "Inventory", emoji: "📦" },
   { to: "/admin/reports", label: "Reports", emoji: "📈" },
   { to: "/admin/settings", label: "Settings", emoji: "⚙️" },
-  { to: "/admin/bottles", label: "Bottles", emoji: "🍾" },
 ];
+
+
 
 export function AdminLayout() {
   const { location } = useRouterState();
@@ -42,10 +43,12 @@ export function AdminLayout() {
   return (
     <div className="min-h-screen bg-slate-50">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-border bg-card md:flex">
+
         <div className="flex items-center gap-2 border-b border-border px-6 py-5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary font-bold text-primary-foreground">M</div>
           <div>
-            <div className="font-bold leading-none">MarkUp</div>
+            <div className="font-bold leading-none">MarketUp</div>
+
             <div className="text-xs text-muted-foreground">Admin Panel</div>
           </div>
         </div>
@@ -72,7 +75,9 @@ export function AdminLayout() {
         <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-card/95 px-4 py-3 backdrop-blur md:px-8">
           <div className="md:hidden flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">M</div>
-            <span className="font-bold">MarkUp Admin</span>
+            <span className="font-bold">MarketUp Admin</span>
+
+
           </div>
           <div className="hidden md:block" />
 

@@ -7,7 +7,10 @@ import {
   Scripts,
   useRouterState,
 } from "@tanstack/react-router";
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
+
+import { supabase } from "@/integrations/supabase/client";
+
 
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth-context";
@@ -47,10 +50,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "MarkUp — Wholesale for sari-sari stores" },
+      { title: "MarketUp — Wholesale for sari-sari stores" },
       { name: "description", content: "Stock up your sari-sari store with wholesale prices, fast delivery, and rewards." },
-      { property: "og:title", content: "MarkUp — Wholesale for sari-sari stores" },
-      { name: "twitter:title", content: "MarkUp — Wholesale for sari-sari stores" },
+      { property: "og:title", content: "MarketUp — Wholesale for sari-sari stores" },
+      { name: "twitter:title", content: "MarketUp — Wholesale for sari-sari stores" },
       { property: "og:description", content: "Stock up your sari-sari store with wholesale prices, fast delivery, and rewards." },
       { name: "twitter:description", content: "Stock up your sari-sari store with wholesale prices, fast delivery, and rewards." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/c9d6192b-23a2-43ec-90d7-a778852d9fdc/id-preview-edbf9ad3--ce918455-0dee-462b-a4d8-9ddb088ce750.lovable.app-1780636966971.png" },
@@ -82,7 +85,45 @@ function RootComponent() {
   const isAdminApp = location.pathname.startsWith("/admin");
   const isBareApp = isRiderApp || isAdminApp;
 
+  useEffect(() => {
+    const checkRoleAndRedirect = async () => {
+      try {
+        const { data: sessionRes } = await supabase.auth.getSession();
+        const session = (sessionRes as any)?.session ?? (sessionRes as any);
+
+        if (!session) return;
+
+        const { data: roleData, error } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error("[__root] error fetching user role:", error);
+          return;
+        }
+
+        const role = roleData?.role;
+        const currentPath = window.location.pathname;
+
+        if (role === "admin" && !currentPath.startsWith("/admin")) {
+          window.location.href = "/admin/dashboard";
+        } else if (role === "rider" && !currentPath.startsWith("/rider")) {
+          window.location.href = "/rider/dashboard";
+        } else if (!role && currentPath.startsWith("/admin")) {
+          window.location.href = "/";
+        }
+      } catch (err) {
+        console.error("[__root] role redirect error:", err);
+      }
+    };
+
+    checkRoleAndRedirect();
+  }, []);
+
   return (
+
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <CartProvider>

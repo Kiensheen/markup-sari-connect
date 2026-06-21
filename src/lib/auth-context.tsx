@@ -1,8 +1,10 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { rememberMeIsEnabled } from "@/lib/remember-me";
 
 type Role = "consumer" | "rider" | "admin";
+
 
 interface AuthCtx {
   user: User | null;
@@ -31,7 +33,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
-        // Defer to avoid deadlock
         setTimeout(async () => {
           const { data } = await supabase.from("user_roles").select("role").eq("user_id", s.user.id).maybeSingle();
           setRole((data?.role as Role) ?? "consumer");
@@ -40,19 +41,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRole(null);
       }
     });
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
+
+    const boot = async () => {
+      const rememberedEnabled = rememberMeIsEnabled();
+      const rememberedAt = localStorage.getItem("marketup_remember_me_at");
+
+      if (!rememberedEnabled) {
+        await supabase.auth.signOut();
+      } else if (rememberedAt) {
+        const at = Number(rememberedAt);
+        if (!Number.isFinite(at) || at <= Date.now()) {
+          localStorage.removeItem("marketup_remember_me");
+          localStorage.removeItem("marketup_remember_me_at");
+          await supabase.auth.signOut();
+        }
+      }
+
+
+      const { data } = await supabase.auth.getSession();
+      const sess = data.session;
+      setSession(sess);
+      setUser(sess?.user ?? null);
       setLoading(false);
-    });
+    };
+
+    boot();
+
     return () => sub.subscription.unsubscribe();
   }, []);
 
+
+
   return (
-    <Ctx.Provider value={{
-      user, session, role, loading,
-      signOut: async () => { await supabase.auth.signOut(); }
-    }}>
+    <Ctx.Provider
+      value={{
+        user,
+        session,
+        role,
+        loading,
+        signOut: async () => {
+          localStorage.removeItem("marketup_remember_me");
+          localStorage.removeItem("marketup_remember_me_at");
+          await supabase.auth.signOut();
+        },
+
+      }}
+    >
       {children}
     </Ctx.Provider>
   );

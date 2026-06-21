@@ -19,8 +19,10 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
+
     e.preventDefault();
     setBusy(true);
     try {
@@ -37,7 +39,19 @@ function AuthPage() {
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+
+        if (data.session) {
+          if (rememberMe) {
+            localStorage.setItem("marketup_remember_me", "1");
+            localStorage.setItem("marketup_remember_me_at", String(Date.now() + 1000 * 60 * 60 * 24 * 30));
+          } else {
+            localStorage.removeItem("marketup_remember_me");
+            localStorage.removeItem("marketup_remember_me_at");
+          }
+        }
+
         toast.success("Welcome back!");
+
         if (data.user && await isAdmin(data.user.id)) {
           navigate({ to: "/admin/dashboard" });
         } else if (data.user && await isRider(data.user.id)) {
@@ -82,7 +96,19 @@ function AuthPage() {
           type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required minLength={6}
           className="w-full rounded-lg border border-input bg-card px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
         />
+
+        <label className="flex items-center gap-2 text-sm text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            className="h-4 w-4 accent-primary"
+          />
+          Remember Me
+        </label>
+
         <button disabled={busy} className="w-full rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60">
+
           {busy ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
         </button>
       </form>

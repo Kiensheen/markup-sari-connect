@@ -1,22 +1,24 @@
-# MarkUp — TODO
+# TODO
 
-## Phase A: Admin login fix
-- [x] Update `src/routes/admin_.login.tsx` to validate admin role *after* successful auth
-- [x] Query role via existing `isAdmin()` helper
-- [x] If not admin: sign out + show error
-- [x] Add console.log debugging
-
-## Phase B: Google OAuth across apps
-- [x] Create `src/components/auth/GoogleLoginButton.tsx`
-- [x] Add Google button to:
-  - [x] `src/routes/rider/RiderLogin.tsx`
-  - [x] Consumer login: `src/routes/auth.tsx` (URL `/auth`)
-- [x] Implement `src/routes/auth/callback.tsx` to role-check `user_roles` and redirect
-- [ ] Verify OAuth redirect integration (Supabase config/env) and ensure callback reaches TanStack route
+- [x] Update `src/routes/rider/dashboard.tsx` to split rider action buttons:
+  - [x] Add `markPickedUp` button shown for `assigned` / `confirmed`
+  - [x] Add new `markOnTheWay` button shown for `picked_up` → update status to `out_for_delivery`
+  - [x] Keep existing `markDelivered` button shown for `out_for_delivery` → `delivered`
+  - [x] Ensure after each update the dashboard refreshes
 
 
-## Testing
-- [ ] Admin login works for admin account, blocks non-admin accounts
-- [ ] Google login works for consumer/rider/admin and redirects correctly
-- [ ] No-role / missing role case redirects to login with error
+- [x] Update `src/components/OrderProgressBar.tsx` / `src/lib/constants.ts` mapping so consumer progress matches:
+  - [x] `pending` → Order Placed
+  - [x] `assigned`/`confirmed` → Order Confirmed
+  - [x] `picked_up` → Picked Up
+  - [x] `out_for_delivery` → On the Way
+  - [x] `delivered` → Delivered
+
+
+
+
+
+- [x] Run typecheck/build (if available) to ensure no TS errors
+
+
 

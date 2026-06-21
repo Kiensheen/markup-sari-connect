@@ -79,6 +79,29 @@ export function RiderDashboard() {
     load();
   };
 
+
+
+
+
+
+  const markOnTheWay = async (orderId: string) => {
+    setBusyId(orderId);
+
+
+
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: "out_for_delivery" })
+      .eq("id", orderId);
+    setBusyId(null);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Marked as on the way");
+    load();
+  };
+
   const markDelivered = async (orderId: string) => {
     setBusyId(orderId);
     const { error } = await supabase
@@ -93,6 +116,7 @@ export function RiderDashboard() {
     toast.success("Delivery completed!");
     load();
   };
+
 
   if (loading) {
     return <p className="py-16 text-center text-muted-foreground">Loading deliveries…</p>;
@@ -151,7 +175,7 @@ export function RiderDashboard() {
           active.map((o) => (
             <OrderCard key={o.id} order={o} pickup={STORE_ADDRESS} badge={statusLabel(o.status)}>
               <div className="mt-4 flex flex-col gap-2">
-                {o.status !== "picked_up" && o.status !== "delivered" && (
+                {(o.status === "assigned" || o.status === "confirmed") && (
                   <button
                     type="button"
                     disabled={busyId === o.id}
@@ -165,12 +189,23 @@ export function RiderDashboard() {
                   <button
                     type="button"
                     disabled={busyId === o.id}
+                    onClick={() => markOnTheWay(o.id)}
+                    className="w-full rounded-xl bg-primary py-3.5 text-base font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                  >
+                    Mark as On the Way
+                  </button>
+                )}
+                {o.status === "out_for_delivery" && (
+                  <button
+                    type="button"
+                    disabled={busyId === o.id}
                     onClick={() => markDelivered(o.id)}
                     className="w-full rounded-xl bg-primary py-3.5 text-base font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
                   >
                     Mark as Delivered
                   </button>
                 )}
+
               </div>
             </OrderCard>
           ))

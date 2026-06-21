@@ -32,6 +32,18 @@ function AuthCallback() {
           throw new Error("No active session after OAuth.");
         }
 
+        // Remember Me for Google sessions too
+        const sess = sessionRes.session;
+        if (sess) {
+          localStorage.setItem("marketup_remember_me", "1");
+          if (sess.expires_at) {
+            localStorage.setItem("marketup_remember_me_at", String(new Date(sess.expires_at).getTime() - 60_000));
+          } else {
+            localStorage.setItem("marketup_remember_me_at", String(Date.now() + 1000 * 60 * 60 * 24 * 30));
+          }
+        }
+
+
         const adminOk = await isAdmin(userId);
         console.log("[auth callback] isAdmin", { userId, adminOk });
         if (adminOk) {

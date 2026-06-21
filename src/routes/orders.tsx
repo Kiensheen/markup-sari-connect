@@ -4,13 +4,22 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { OrderProgressBar } from "@/components/OrderProgressBar";
+import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { jsPDF } from "jspdf";
+
 
 export const Route = createFileRoute("/orders")({
+
   component: OrdersPage,
 });
 
 interface Order {
   id: string;
+  rider_id: string | null;
+
   status: string;
   total: number;
   delivery_fee: number;
@@ -38,12 +47,169 @@ const paymentLabel = (method: string) => {
 
 function OrdersPage() {
   const { user, loading } = useAuth();
-  const [orders, setOrders] = useState<Order[]>([]);
+
+  const [receiptBusyId, setReceiptBusyId] = useState<string | null>(null);
+
+  const generateReceipt = async (order: Order) => {
+
+    // Only for delivered orders (UI guard)
+    const orderId = order.id;
+
+    // Fetch rider name/email for receipt
+    // Rider is stored in orders.rider_id, and rider profile is in profiles
+    const { data: riderProfile } = await supabase
+      .from("profiles")
+      .select("name,email")
+      .eq("id", order.rider_id)
+      .maybeSingle();
+
+    const riderName = riderProfile?.name ?? riderProfile?.email ?? "N/A";
+
+    const doc = new jsPDF({ unit: "pt", format: "letter" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    const left = 48;
+    let y = 54;
+
+    const centerText = (text: string, yy: number, size = 16) => {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(size);
+      const textWidth = doc.getTextWidth(text);
+      doc.text(text, (pageWidth - textWidth) / 2, yy);
+    };
+
+    const text = (t: string, yy: number, size = 10) => {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(size);
+      doc.text(t, left, yy);
+    };
+
+    centerText("MARKETUP", y, 18);
+    y += 18;
+    centerText("Order Receipt", y, 14);
+    y += 28;
+
+    text(`Order ID: ${orderId}`, y);
+    y += 14;
+    text(`Date: ${new Date(order.created_at).toLocaleString()}`, y);
+    y += 20;
+
+    text("Items:", y);
+    y += 14;
+
+    const items = order.order_items ?? [];
+    let subtotal = 0;
+
+    for (const it of items) {
+      const itemTotal = (it.price ?? 0) * (it.quantity ?? 0);
+      subtotal += itemTotal;
+
+      const line = `${it.products?.name ?? "Item"} x ${it.quantity} = ₱${Number(itemTotal).toLocaleString()}`;
+      // naive wrapping
+      const maxWidth = pageWidth - left * 2;
+      const words = line.split(" ");
+      let current = "";
+      for (const w of words) {
+        const next = current ? `${current} ${w}` : w;
+        if (doc.getTextWidth(next) > maxWidth) {
+          doc.text(current, left, y);
+          y += 12;
+          current = w;
+        } else {
+          current = next;
+        }
+      }
+      if (current) {
+        doc.text(current, left, y);
+        y += 12;
+      }
+    }
+
+    y += 8;
+
+    const deliveryFee = Number(order.delivery_fee ?? 0);
+    const total = Number(order.total ?? 0);
+
+    text(`Subtotal: ₱${subtotal.toLocaleString()}`, y);
+    y += 14;
+    text(`Delivery Fee: ₱${deliveryFee.toLocaleString()}`, y);
+    y += 14;
+    text(`Total: ₱${total.toLocaleString()}`, y);
+    y += 18;
+
+    text(`Delivery Address: ${order.delivery_address ?? "N/A"}`, y);
+    y += 14;
+    text(`Rider: ${riderName}`, y);
+    y += 22;
+
+    centerText("Thank you for shopping at MarketUp!", y, 11);
+    y += 18;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    centerText("", y);
+
+    const blob = doc.output("blob");
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Receipt-${orderId}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+const [orders, setOrders] = useState<Order[]>([]);
+
+
   const [busy, setBusy] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelingOrderId, setCancelingOrderId] = useState<string | null>(null);
+  const [cancelBusy, setCancelBusy] = useState(false);
+
+  const openCancel = (orderId: string) => {
+    setCancelingOrderId(orderId);
+    setCancelOpen(true);
+  };
+
+
+  const confirmCancel = async () => {
+    if (!user || !cancelingOrderId) return;
+    setCancelBusy(true);
+    try {
+      console.log("[orders] cancel request", { orderId: cancelingOrderId, userId: user.id });
+
+      const { error } = await supabase
+        .from("orders")
+        .update({ status: "cancelled" })
+        .eq("id", cancelingOrderId)
+        .eq("consumer_id", user.id)
+        .is("rider_id", null);
+
+      if (error) throw error;
+
+      setCancelOpen(false);
+      setCancelingOrderId(null);
+      toast.success("Order cancelled successfully");
+
+      // refresh list
+      const { data } = await supabase
+        .from("orders")
+        .select("id,status,total,delivery_fee,payment_method,delivery_address,notes,created_at,order_items(id,quantity,price,products(name))")
+        .eq("consumer_id", user.id)
+        .order("created_at", { ascending: false });
+
+      setOrders((data as unknown as Order[]) ?? []);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Failed to cancel order";
+      toast.error(message);
+    } finally {
+      setCancelBusy(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) { setBusy(false); return; }
+
     supabase
       .from("orders")
       .select("id,status,total,delivery_fee,payment_method,delivery_address,notes,created_at,order_items(id,quantity,price,products(name))")
@@ -62,11 +228,24 @@ function OrdersPage() {
 
   return (
     <div className="space-y-4">
+      <ConfirmDialog
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        title="Cancel order?"
+        description="This will cancel your pending order. You will not be charged."
+        confirmLabel="Yes, cancel"
+        cancelLabel="No"
+        destructive
+        loading={cancelBusy}
+        onConfirm={confirmCancel}
+      />
+
       <h1 className="text-2xl font-bold">My Orders</h1>
       {orders.length === 0 ? (
         <p className="py-10 text-center text-sm text-muted-foreground">No orders yet.</p>
       ) : (
         <div className="space-y-3">
+
           {orders.map((o) => {
             const isOpen = expanded === o.id;
             return (
@@ -115,9 +294,23 @@ function OrdersPage() {
                         <p className="text-xs text-muted-foreground">📍 {o.delivery_address}</p>
                       )}
                       {o.notes && (
-                        <p className="text-xs text-muted-foreground">Note: {o.notes}</p>
+                      <p className="text-xs text-muted-foreground">Note: {o.notes}</p>
                       )}
+                      {o.status === "pending" && o.rider_id === null && (
+                        <div className="mt-3">
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            type="button"
+                            onClick={() => openCancel(o.id)}
+                          >
+                            Cancel Order
+                          </Button>
+                        </div>
+                      )}
+
                     </div>
+
                   </div>
                 )}
               </div>

@@ -41,6 +41,19 @@ function ProfilePage() {
   const [redeemOpen, setRedeemOpen] = useState(false);
   const [redeeming, setRedeeming] = useState(false);
 
+  const [editMode, setEditMode] = useState(false);
+  const [saveBusy, setSaveBusy] = useState(false);
+
+  const [editFirstName, setEditFirstName] = useState("");
+  const [editMiddleName, setEditMiddleName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editProvince, setEditProvince] = useState("");
+  const [editCity, setEditCity] = useState("");
+  const [editBarangay, setEditBarangay] = useState("");
+  const [editStreet, setEditStreet] = useState("");
+
+
   const refresh = async () => {
     if (!user) return;
     const { data: prof } = await supabase
