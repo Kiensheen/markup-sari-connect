@@ -243,7 +243,7 @@ function OrderCard({
       <div className="mt-3 space-y-2 text-sm">
         <div className="rounded-lg bg-muted/50 p-3">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Pickup</p>
-          <p className="mt-0.5 font-medium">MarkUp Store — {pickup}</p>
+          <p className="mt-0.5 font-medium">MarketUp Store — {pickup}</p>
         </div>
         <div className="rounded-lg bg-muted/50 p-3">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Dropoff</p>
