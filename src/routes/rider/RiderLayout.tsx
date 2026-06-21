@@ -24,7 +24,7 @@ export function RiderLayout() {
         <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">M</div>
-            <span className="font-bold">MarkUp Rider</span>
+            <span className="font-bold">MarketUp Rider</span>
           </div>
           <button
             type="button"
