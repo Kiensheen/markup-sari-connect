@@ -39,6 +39,7 @@ interface Profile {
   city?: string | null;
   barangay?: string | null;
   street?: string | null;
+  avatar_url?: string | null;
 }
 
 function ProfilePage() {
