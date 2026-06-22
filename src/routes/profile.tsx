@@ -181,13 +181,44 @@ function ProfilePage() {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-xl font-bold text-primary-foreground">
-          {(profile?.name ?? user.email ?? "U").charAt(0).toUpperCase()}
+        <div className="relative">
+          {avatarSignedUrl ? (
+            <img src={avatarSignedUrl} alt="Profile" className="h-16 w-16 rounded-full object-cover" />
+          ) : (
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-xl font-bold text-primary-foreground">
+              {(profile?.name ?? user.email ?? "U").charAt(0).toUpperCase()}
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingAvatar}
+            aria-label="Upload photo"
+            className="absolute -bottom-1 -right-1 inline-flex h-7 w-7 items-center justify-center rounded-full border border-border bg-background text-foreground shadow hover:bg-muted disabled:opacity-60"
+          >
+            <Camera className="h-3.5 w-3.5" />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => { void handleAvatarFile(e.target.files?.[0] ?? null); e.target.value = ""; }}
+          />
         </div>
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-xl font-bold">{profile?.name ?? "Store Owner"}</h1>
           <p className="truncate text-sm text-muted-foreground">{profile?.email ?? user.email}</p>
           {profile?.phone && <p className="text-xs text-muted-foreground">{profile.phone}</p>}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingAvatar}
+            className="mt-1 text-xs font-medium text-primary hover:underline disabled:opacity-60"
+          >
+            {uploadingAvatar ? "Uploading…" : avatarSignedUrl ? "Change photo" : "Upload photo"}
+          </button>
         </div>
       </div>
 
