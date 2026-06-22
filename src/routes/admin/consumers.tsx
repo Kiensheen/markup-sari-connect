@@ -17,6 +17,7 @@ type Profile = {
   address: string | null;
   points_balance: number;
   is_blocked?: boolean;
+  blocked_until?: string | null;
   created_at: string;
 };
 
