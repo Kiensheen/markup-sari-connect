@@ -17,6 +17,7 @@ type Profile = {
   address: string | null;
   points_balance: number;
   is_blocked?: boolean;
+  blocked_until?: string | null;
   created_at: string;
 };
 
@@ -79,9 +80,34 @@ function AdminConsumers() {
     load();
   };
 
+  const isCurrentlyBlocked = (p: Profile | null) =>
+    !!p && (p.is_blocked === true || (!!p.blocked_until && new Date(p.blocked_until).getTime() > Date.now()));
+
+  const applyBlock = async (mode: "24h" | "7d" | "permanent") => {
+    if (!selected) return;
+    const updates: { is_blocked: boolean; blocked_until: string | null } =
+      mode === "permanent"
+        ? { is_blocked: true, blocked_until: null }
+        : { is_blocked: true, blocked_until: new Date(Date.now() + (mode === "24h" ? 24 : 24 * 7) * 60 * 60 * 1000).toISOString() };
+    const { error } = await supabase.from("profiles").update(updates).eq("id", selected.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success(mode === "permanent" ? "Consumer blocked permanently" : `Consumer blocked for ${mode === "24h" ? "24 hours" : "7 days"}`);
+    setSelected({ ...selected, ...updates });
+    load();
+  };
+
+  const unblock = async () => {
+    if (!selected) return;
+    const { error } = await supabase.from("profiles").update({ is_blocked: false, blocked_until: null }).eq("id", selected.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Consumer unblocked");
+    setSelected({ ...selected, is_blocked: false, blocked_until: null });
+    load();
+  };
+
   const exportCSV = () => downloadCSV(`consumers-${Date.now()}.csv`, filtered.map((r) => ({
     id: r.id, name: r.name ?? "", email: r.email ?? "", phone: r.phone ?? "", address: r.address ?? "",
-    points: r.points_balance, blocked: r.is_blocked ? "yes" : "no", joined: r.created_at,
+    points: r.points_balance, blocked: isCurrentlyBlocked(r) ? "yes" : "no", blocked_until: r.blocked_until ?? "", joined: r.created_at,
   })));
 
   return (
@@ -120,7 +146,15 @@ function AdminConsumers() {
                 <td className="px-4 py-3">{r.email}</td>
                 <td className="px-4 py-3">{r.phone || "—"}</td>
                 <td className="px-4 py-3">{r.points_balance}</td>
-                <td className="px-4 py-3">{r.is_blocked ? <span className="text-red-600">Blocked</span> : <span className="text-green-600">Active</span>}</td>
+                <td className="px-4 py-3">
+                  {isCurrentlyBlocked(r) ? (
+                    <span className="text-red-600">
+                      Blocked{r.blocked_until ? ` · until ${formatDate(r.blocked_until)}` : ""}
+                    </span>
+                  ) : (
+                    <span className="text-green-600">Active</span>
+                  )}
+                </td>
                 <td className="px-4 py-3 text-slate-500">{formatDate(r.created_at)}</td>
                 <td className="px-4 py-3"><button onClick={() => open(r)} className="text-blue-600 hover:underline">Manage</button></td>
               </tr>
@@ -142,11 +176,30 @@ function AdminConsumers() {
               <Field label="Email"><input className={inp} value={selected.email ?? ""} disabled /></Field>
               <Field label="Phone"><input className={inp} value={selected.phone ?? ""} onChange={(e) => setSelected({ ...selected, phone: e.target.value })} /></Field>
               <Field label="Address"><input className={inp} value={selected.address ?? ""} onChange={(e) => setSelected({ ...selected, address: e.target.value })} /></Field>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={!!selected.is_blocked} onChange={(e) => setSelected({ ...selected, is_blocked: e.target.checked })} />
-                Block this consumer (prevent placing orders — enforced via order policies)
-              </label>
               <button onClick={saveProfile} className="w-full rounded-lg bg-slate-900 py-2 font-semibold text-white hover:bg-slate-800">Save profile</button>
+            </div>
+
+            <div className="rounded-lg border border-slate-200 p-4 mb-6">
+              <div className="mb-2 text-sm font-semibold">Account access</div>
+              {isCurrentlyBlocked(selected) ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-red-600">
+                    Currently blocked{selected.blocked_until ? ` until ${formatDate(selected.blocked_until)}` : " (permanent)"}.
+                  </p>
+                  <button onClick={unblock} className="w-full rounded-lg bg-green-600 py-2 text-sm font-semibold text-white hover:bg-green-700">
+                    Unblock
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-xs text-slate-500">Blocked consumers cannot place orders.</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button onClick={() => applyBlock("24h")} className="rounded-lg border border-red-200 bg-red-50 py-2 text-sm font-semibold text-red-700 hover:bg-red-100">Block 24h</button>
+                    <button onClick={() => applyBlock("7d")} className="rounded-lg border border-red-200 bg-red-50 py-2 text-sm font-semibold text-red-700 hover:bg-red-100">Block 7 days</button>
+                    <button onClick={() => applyBlock("permanent")} className="rounded-lg bg-red-600 py-2 text-sm font-semibold text-white hover:bg-red-700">Permanent</button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="rounded-lg border border-slate-200 p-4 mb-6">

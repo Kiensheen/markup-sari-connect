@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Award, Gift, LogOut, User as UserIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Award, Camera, Gift, LogOut, User as UserIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { REDEEM_REWARD } from "@/lib/constants";
@@ -39,6 +39,7 @@ interface Profile {
   city?: string | null;
   barangay?: string | null;
   street?: string | null;
+  avatar_url?: string | null;
 }
 
 function ProfilePage() {
@@ -47,6 +48,9 @@ function ProfilePage() {
   const [txns, setTxns] = useState<Txn[]>([]);
   const [redeemOpen, setRedeemOpen] = useState(false);
   const [redeeming, setRedeeming] = useState(false);
+  const [avatarSignedUrl, setAvatarSignedUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [editMode, setEditMode] = useState(false);
   const [saveBusy, setSaveBusy] = useState(false);
@@ -65,11 +69,17 @@ function ProfilePage() {
     if (!user) return;
     const { data: prof } = await supabase
       .from("profiles")
-      .select("name,email,phone,address,points_balance,first_name,middle_name,last_name,province,city,barangay,street")
+      .select("name,email,phone,address,points_balance,first_name,middle_name,last_name,province,city,barangay,street,avatar_url")
       .eq("id", user.id)
       .maybeSingle();
     const p = prof as Profile | null;
     setProfile(p);
+    if (p?.avatar_url) {
+      const { data: signed } = await supabase.storage.from("avatars").createSignedUrl(p.avatar_url, 60 * 60);
+      setAvatarSignedUrl(signed?.signedUrl ?? null);
+    } else {
+      setAvatarSignedUrl(null);
+    }
     if (p) {
       setEditFirstName(p.first_name ?? "");
       setEditMiddleName(p.middle_name ?? "");
@@ -120,6 +130,22 @@ function ProfilePage() {
     refresh();
   };
 
+  const handleAvatarFile = async (file: File | null) => {
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) { toast.error("Please choose an image file"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("Image must be under 5MB"); return; }
+    setUploadingAvatar(true);
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
+    if (upErr) { setUploadingAvatar(false); toast.error(upErr.message); return; }
+    const { error: dbErr } = await supabase.from("profiles").update({ avatar_url: path }).eq("id", user.id);
+    setUploadingAvatar(false);
+    if (dbErr) { toast.error(dbErr.message); return; }
+    toast.success("Profile photo updated");
+    refresh();
+  };
+
 
   const handleRedeem = async () => {
     if (!user || !profile) return;
@@ -155,13 +181,44 @@ function ProfilePage() {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-xl font-bold text-primary-foreground">
-          {(profile?.name ?? user.email ?? "U").charAt(0).toUpperCase()}
+        <div className="relative">
+          {avatarSignedUrl ? (
+            <img src={avatarSignedUrl} alt="Profile" className="h-16 w-16 rounded-full object-cover" />
+          ) : (
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-xl font-bold text-primary-foreground">
+              {(profile?.name ?? user.email ?? "U").charAt(0).toUpperCase()}
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingAvatar}
+            aria-label="Upload photo"
+            className="absolute -bottom-1 -right-1 inline-flex h-7 w-7 items-center justify-center rounded-full border border-border bg-background text-foreground shadow hover:bg-muted disabled:opacity-60"
+          >
+            <Camera className="h-3.5 w-3.5" />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => { void handleAvatarFile(e.target.files?.[0] ?? null); e.target.value = ""; }}
+          />
         </div>
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-xl font-bold">{profile?.name ?? "Store Owner"}</h1>
           <p className="truncate text-sm text-muted-foreground">{profile?.email ?? user.email}</p>
           {profile?.phone && <p className="text-xs text-muted-foreground">{profile.phone}</p>}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingAvatar}
+            className="mt-1 text-xs font-medium text-primary hover:underline disabled:opacity-60"
+          >
+            {uploadingAvatar ? "Uploading…" : avatarSignedUrl ? "Change photo" : "Upload photo"}
+          </button>
         </div>
       </div>
 
