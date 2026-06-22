@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Award, Gift, LogOut, User as UserIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Award, Camera, Gift, LogOut, User as UserIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { REDEEM_REWARD } from "@/lib/constants";
