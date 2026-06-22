@@ -130,6 +130,22 @@ function ProfilePage() {
     refresh();
   };
 
+  const handleAvatarFile = async (file: File | null) => {
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) { toast.error("Please choose an image file"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("Image must be under 5MB"); return; }
+    setUploadingAvatar(true);
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
+    if (upErr) { setUploadingAvatar(false); toast.error(upErr.message); return; }
+    const { error: dbErr } = await supabase.from("profiles").update({ avatar_url: path }).eq("id", user.id);
+    setUploadingAvatar(false);
+    if (dbErr) { toast.error(dbErr.message); return; }
+    toast.success("Profile photo updated");
+    refresh();
+  };
+
 
   const handleRedeem = async () => {
     if (!user || !profile) return;
