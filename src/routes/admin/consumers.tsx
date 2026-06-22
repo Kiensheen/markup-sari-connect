@@ -176,11 +176,30 @@ function AdminConsumers() {
               <Field label="Email"><input className={inp} value={selected.email ?? ""} disabled /></Field>
               <Field label="Phone"><input className={inp} value={selected.phone ?? ""} onChange={(e) => setSelected({ ...selected, phone: e.target.value })} /></Field>
               <Field label="Address"><input className={inp} value={selected.address ?? ""} onChange={(e) => setSelected({ ...selected, address: e.target.value })} /></Field>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={!!selected.is_blocked} onChange={(e) => setSelected({ ...selected, is_blocked: e.target.checked })} />
-                Block this consumer (prevent placing orders — enforced via order policies)
-              </label>
               <button onClick={saveProfile} className="w-full rounded-lg bg-slate-900 py-2 font-semibold text-white hover:bg-slate-800">Save profile</button>
+            </div>
+
+            <div className="rounded-lg border border-slate-200 p-4 mb-6">
+              <div className="mb-2 text-sm font-semibold">Account access</div>
+              {isCurrentlyBlocked(selected) ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-red-600">
+                    Currently blocked{selected.blocked_until ? ` until ${formatDate(selected.blocked_until)}` : " (permanent)"}.
+                  </p>
+                  <button onClick={unblock} className="w-full rounded-lg bg-green-600 py-2 text-sm font-semibold text-white hover:bg-green-700">
+                    Unblock
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-xs text-slate-500">Blocked consumers cannot place orders.</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button onClick={() => applyBlock("24h")} className="rounded-lg border border-red-200 bg-red-50 py-2 text-sm font-semibold text-red-700 hover:bg-red-100">Block 24h</button>
+                    <button onClick={() => applyBlock("7d")} className="rounded-lg border border-red-200 bg-red-50 py-2 text-sm font-semibold text-red-700 hover:bg-red-100">Block 7 days</button>
+                    <button onClick={() => applyBlock("permanent")} className="rounded-lg bg-red-600 py-2 text-sm font-semibold text-white hover:bg-red-700">Permanent</button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="rounded-lg border border-slate-200 p-4 mb-6">
