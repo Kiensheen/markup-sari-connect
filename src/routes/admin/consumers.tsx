@@ -146,7 +146,15 @@ function AdminConsumers() {
                 <td className="px-4 py-3">{r.email}</td>
                 <td className="px-4 py-3">{r.phone || "—"}</td>
                 <td className="px-4 py-3">{r.points_balance}</td>
-                <td className="px-4 py-3">{r.is_blocked ? <span className="text-red-600">Blocked</span> : <span className="text-green-600">Active</span>}</td>
+                <td className="px-4 py-3">
+                  {isCurrentlyBlocked(r) ? (
+                    <span className="text-red-600">
+                      Blocked{r.blocked_until ? ` · until ${formatDate(r.blocked_until)}` : ""}
+                    </span>
+                  ) : (
+                    <span className="text-green-600">Active</span>
+                  )}
+                </td>
                 <td className="px-4 py-3 text-slate-500">{formatDate(r.created_at)}</td>
                 <td className="px-4 py-3"><button onClick={() => open(r)} className="text-blue-600 hover:underline">Manage</button></td>
               </tr>
