@@ -69,11 +69,17 @@ function ProfilePage() {
     if (!user) return;
     const { data: prof } = await supabase
       .from("profiles")
-      .select("name,email,phone,address,points_balance,first_name,middle_name,last_name,province,city,barangay,street")
+      .select("name,email,phone,address,points_balance,first_name,middle_name,last_name,province,city,barangay,street,avatar_url")
       .eq("id", user.id)
       .maybeSingle();
     const p = prof as Profile | null;
     setProfile(p);
+    if (p?.avatar_url) {
+      const { data: signed } = await supabase.storage.from("avatars").createSignedUrl(p.avatar_url, 60 * 60);
+      setAvatarSignedUrl(signed?.signedUrl ?? null);
+    } else {
+      setAvatarSignedUrl(null);
+    }
     if (p) {
       setEditFirstName(p.first_name ?? "");
       setEditMiddleName(p.middle_name ?? "");
