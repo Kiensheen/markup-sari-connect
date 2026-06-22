@@ -48,6 +48,9 @@ function ProfilePage() {
   const [txns, setTxns] = useState<Txn[]>([]);
   const [redeemOpen, setRedeemOpen] = useState(false);
   const [redeeming, setRedeeming] = useState(false);
+  const [avatarSignedUrl, setAvatarSignedUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [editMode, setEditMode] = useState(false);
   const [saveBusy, setSaveBusy] = useState(false);
