@@ -80,9 +80,34 @@ function AdminConsumers() {
     load();
   };
 
+  const isCurrentlyBlocked = (p: Profile | null) =>
+    !!p && (p.is_blocked === true || (!!p.blocked_until && new Date(p.blocked_until).getTime() > Date.now()));
+
+  const applyBlock = async (mode: "24h" | "7d" | "permanent") => {
+    if (!selected) return;
+    const updates: { is_blocked: boolean; blocked_until: string | null } =
+      mode === "permanent"
+        ? { is_blocked: true, blocked_until: null }
+        : { is_blocked: true, blocked_until: new Date(Date.now() + (mode === "24h" ? 24 : 24 * 7) * 60 * 60 * 1000).toISOString() };
+    const { error } = await supabase.from("profiles").update(updates).eq("id", selected.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success(mode === "permanent" ? "Consumer blocked permanently" : `Consumer blocked for ${mode === "24h" ? "24 hours" : "7 days"}`);
+    setSelected({ ...selected, ...updates });
+    load();
+  };
+
+  const unblock = async () => {
+    if (!selected) return;
+    const { error } = await supabase.from("profiles").update({ is_blocked: false, blocked_until: null }).eq("id", selected.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Consumer unblocked");
+    setSelected({ ...selected, is_blocked: false, blocked_until: null });
+    load();
+  };
+
   const exportCSV = () => downloadCSV(`consumers-${Date.now()}.csv`, filtered.map((r) => ({
     id: r.id, name: r.name ?? "", email: r.email ?? "", phone: r.phone ?? "", address: r.address ?? "",
-    points: r.points_balance, blocked: r.is_blocked ? "yes" : "no", joined: r.created_at,
+    points: r.points_balance, blocked: isCurrentlyBlocked(r) ? "yes" : "no", blocked_until: r.blocked_until ?? "", joined: r.created_at,
   })));
 
   return (
