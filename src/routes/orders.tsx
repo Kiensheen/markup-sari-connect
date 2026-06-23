@@ -311,7 +311,7 @@ const [orders, setOrders] = useState<Order[]>([]);
                       {o.notes && (
                       <p className="text-xs text-muted-foreground">Note: {o.notes}</p>
                       )}
-                      {o.status === "pending" && o.rider_id === null && (
+                      {o.rider_id === null && ["pending", "confirmed", "assigned"].includes(o.status) && (
                         <div className="mt-3">
                           <Button
                             variant="destructive"
