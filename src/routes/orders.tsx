@@ -176,25 +176,40 @@ const [orders, setOrders] = useState<Order[]>([]);
     if (!user || !cancelingOrderId) return;
     setCancelBusy(true);
     try {
-      console.log("[orders] cancel request", { orderId: cancelingOrderId, userId: user.id });
+      const orderBeing = orders.find((o) => o.id === cancelingOrderId);
+      console.log("[orders] cancel request", {
+        orderId: cancelingOrderId,
+        userId: user.id,
+        status: orderBeing?.status,
+        rider_id: orderBeing?.rider_id,
+      });
 
-      const { error } = await supabase
+      const { data: updated, error } = await supabase
         .from("orders")
         .update({ status: "cancelled" })
         .eq("id", cancelingOrderId)
         .eq("consumer_id", user.id)
-        .is("rider_id", null);
+        .is("rider_id", null)
+        .in("status", ["pending", "confirmed", "assigned"])
+        .select("id");
 
-      if (error) throw error;
+      if (error) {
+        console.error("[orders] cancel error", error);
+        toast.error("Failed to cancel order: " + error.message);
+        return;
+      }
+      if (!updated || updated.length === 0) {
+        toast.error("Cannot cancel this order anymore.");
+        return;
+      }
 
       setCancelOpen(false);
       setCancelingOrderId(null);
       toast.success("Order cancelled successfully");
 
-      // refresh list
       const { data } = await supabase
         .from("orders")
-        .select("id,status,total,delivery_fee,payment_method,delivery_address,notes,created_at,order_items(id,quantity,price,products(name))")
+        .select("id,rider_id,status,total,delivery_fee,payment_method,delivery_address,notes,created_at,order_items(id,quantity,price,products(name))")
         .eq("consumer_id", user.id)
         .order("created_at", { ascending: false });
 
@@ -212,7 +227,7 @@ const [orders, setOrders] = useState<Order[]>([]);
 
     supabase
       .from("orders")
-      .select("id,status,total,delivery_fee,payment_method,delivery_address,notes,created_at,order_items(id,quantity,price,products(name))")
+      .select("id,rider_id,status,total,delivery_fee,payment_method,delivery_address,notes,created_at,order_items(id,quantity,price,products(name))")
       .eq("consumer_id", user.id)
       .order("created_at", { ascending: false })
       .then(({ data }) => { setOrders((data as unknown as Order[]) ?? []); setBusy(false); });
@@ -296,7 +311,7 @@ const [orders, setOrders] = useState<Order[]>([]);
                       {o.notes && (
                       <p className="text-xs text-muted-foreground">Note: {o.notes}</p>
                       )}
-                      {o.status === "pending" && o.rider_id === null && (
+                      {o.rider_id === null && ["pending", "confirmed", "assigned"].includes(o.status) && (
                         <div className="mt-3">
                           <Button
                             variant="destructive"

@@ -2,6 +2,25 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { rememberMeIsEnabled } from "@/lib/remember-me";
+import { APP_VERSION } from "@/lib/constants";
+
+const APP_VERSION_KEY = "marketup_app_version";
+
+if (typeof window !== "undefined") {
+  try {
+    const stored = window.localStorage.getItem(APP_VERSION_KEY);
+    if (stored !== APP_VERSION) {
+      window.localStorage.clear();
+      window.sessionStorage.clear();
+      window.localStorage.setItem(APP_VERSION_KEY, APP_VERSION);
+      if (stored !== null) {
+        window.location.reload();
+      }
+    }
+  } catch {
+    // ignore
+  }
+}
 
 type Role = "consumer" | "rider" | "admin";
 
