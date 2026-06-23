@@ -4,7 +4,7 @@ export const STORE_ADDRESS =
   import.meta.env.VITE_MARKUP_STORE_ADDRESS ?? "123 Wholesale Ave, Quezon City, Metro Manila";
 
 /** Active rider statuses (maps accepted → confirmed, out_for_delivery → assigned) */
-export const RIDER_ACTIVE_STATUSES = ["confirmed", "assigned", "picked_up"] as const;
+export const RIDER_ACTIVE_STATUSES = ["confirmed", "assigned", "picked_up", "out_for_delivery"] as const;
 
 export async function isRider(userId: string): Promise<boolean> {
   const { data } = await supabase
@@ -23,8 +23,9 @@ export function statusLabel(status: string) {
   const labels: Record<string, string> = {
     pending: "Pending",
     confirmed: "Accepted",
-    assigned: "Out for delivery",
+    assigned: "Assigned",
     picked_up: "Picked up",
+    out_for_delivery: "On the way",
     delivered: "Delivered",
     cancelled: "Cancelled",
   };
