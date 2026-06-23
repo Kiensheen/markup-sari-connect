@@ -1,3 +1,5 @@
+export const APP_VERSION = "1.0.0";
+
 export const DELIVERY_FEE = 49;
 
 export const PRODUCT_CATEGORIES = [
