@@ -315,6 +315,7 @@ export type Database = {
         | "picked_up"
         | "delivered"
         | "cancelled"
+        | "out_for_delivery"
       payment_method: "cod" | "online"
     }
     CompositeTypes: {
@@ -451,6 +452,7 @@ export const Constants = {
         "picked_up",
         "delivered",
         "cancelled",
+        "out_for_delivery",
       ],
       payment_method: ["cod", "online"],
     },
