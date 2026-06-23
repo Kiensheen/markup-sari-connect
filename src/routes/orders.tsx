@@ -28,7 +28,12 @@ interface Order {
   notes: string | null;
   created_at: string;
   order_items: { id: string; quantity: number; price: number; products: { name: string } | null }[];
+
+  delivery_failure_reason: string | null;
+  delivery_failure_notes: string | null;
+  delivery_failure_at: string | null;
 }
+
 
 const statusColor: Record<string, string> = {
   pending: "bg-warning/20 text-warning-foreground",
@@ -161,6 +166,21 @@ const [orders, setOrders] = useState<Order[]>([]);
 
 
   const [busy, setBusy] = useState(true);
+
+  const formatFailureReason = (reasonCode: string | null) => {
+    if (!reasonCode) return null;
+    const map: Record<string, string> = {
+      customer_not_present: "Customer not present at delivery point",
+      customer_refused: "Customer refused the order",
+      accident: "Accident during delivery",
+      product_damaged: "Product damaged during delivery",
+      incorrect_address: "Incorrect delivery address",
+      customer_requested_reschedule: "Customer requested reschedule",
+      other: "Other",
+    };
+    return map[reasonCode] ?? reasonCode;
+  };
+
   const [expanded, setExpanded] = useState<string | null>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelingOrderId, setCancelingOrderId] = useState<string | null>(null);

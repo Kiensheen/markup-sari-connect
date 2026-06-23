@@ -4,6 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { formatPeso, RIDER_ACTIVE_STATUSES, statusLabel, STORE_ADDRESS } from "@/lib/rider-utils";
 import { toast } from "sonner";
+import { DeliveryFailureDialog, type DeliveryFailureReasonCode } from "@/components/rider/DeliveryFailureDialog";
+import { DELIVERY_FAILURE_REASON_OPTIONS } from "@/components/rider/DeliveryFailureDialog";
+
 
 interface RiderOrder {
   id: string;
@@ -20,6 +23,9 @@ export function RiderDashboard() {
   const [active, setActive] = useState<RiderOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [failureOpen, setFailureOpen] = useState(false);
+  const [failureOrderId, setFailureOrderId] = useState<string | null>(null);
+
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -117,6 +123,55 @@ export function RiderDashboard() {
     load();
   };
 
+  const onConfirmFailure = async ({
+    reasonCode,
+    notes,
+  }: {
+    reasonCode: DeliveryFailureReasonCode;
+    notes: string | null;
+  }) => {
+    if (!user) return;
+    if (!failureOrderId) return;
+
+    const reasonOpt = DELIVERY_FAILURE_REASON_OPTIONS.find((o) => o.code === reasonCode);
+    const reasonText = reasonOpt?.label ?? reasonCode;
+
+    setBusyId(failureOrderId);
+    try {
+      const { error: updateErr } = await supabase
+        .from("orders")
+        .update({
+          status: "delivery_failed",
+          delivery_failure_reason: reasonCode,
+          delivery_failure_notes: notes,
+          delivery_failure_at: new Date().toISOString(),
+        })
+        .eq("id", failureOrderId);
+
+      if (updateErr) throw updateErr;
+
+      const { error: insertErr } = await supabase.from("delivery_attempts").insert({
+        order_id: failureOrderId,
+        rider_id: user.id,
+        status: "failed",
+        reason_code: reasonCode,
+        reason_text: reasonText,
+        notes,
+      });
+
+      if (insertErr) throw insertErr;
+
+      toast.error("Delivery marked as unsuccessful.");
+      setFailureOpen(false);
+      setFailureOrderId(null);
+      load();
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Failed to submit delivery failure";
+      toast.error(message);
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   if (loading) {
     return <p className="py-16 text-center text-muted-foreground">Loading deliveries…</p>;
@@ -124,6 +179,17 @@ export function RiderDashboard() {
 
   return (
     <div className="space-y-6">
+      <DeliveryFailureDialog
+        open={failureOpen}
+        onOpenChange={(v) => {
+          setFailureOpen(v);
+          if (!v) {
+            setFailureOrderId(null);
+          }
+        }}
+        onConfirm={onConfirmFailure}
+      />
+
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <button
@@ -196,14 +262,27 @@ export function RiderDashboard() {
                   </button>
                 )}
                 {o.status === "out_for_delivery" && (
-                  <button
-                    type="button"
-                    disabled={busyId === o.id}
-                    onClick={() => markDelivered(o.id)}
-                    className="w-full rounded-xl bg-primary py-3.5 text-base font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
-                  >
-                    Mark as Delivered
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      disabled={busyId === o.id}
+                      onClick={() => markDelivered(o.id)}
+                      className="w-full rounded-xl bg-primary py-3.5 text-base font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                    >
+                      Mark as Delivered
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busyId === o.id}
+                      onClick={() => {
+                        setFailureOrderId(o.id);
+                        setFailureOpen(true);
+                      }}
+                      className="w-full rounded-xl border-2 border-destructive bg-destructive/5 py-3.5 text-base font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-60"
+                    >
+                      Mark as Unsuccessful
+                    </button>
+                  </>
                 )}
 
               </div>

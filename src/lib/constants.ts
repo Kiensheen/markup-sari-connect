@@ -16,6 +16,7 @@ export const ORDER_STAGES = [
   "Picked Up",
   "On the Way",
   "Delivered",
+  "Delivery Failed",
 ] as const;
 
 export const ORDER_STATUS_STEP: Record<string, number> = {
@@ -25,8 +26,10 @@ export const ORDER_STATUS_STEP: Record<string, number> = {
   picked_up: 1,
   out_for_delivery: 2,
   delivered: 3,
+  delivery_failed: 4,
   cancelled: -1,
 };
+
 
 export const REDEEM_REWARD = { name: "₱50 off coupon", cost: 500, value: 50 };
 
