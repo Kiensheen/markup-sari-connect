@@ -227,7 +227,7 @@ const [orders, setOrders] = useState<Order[]>([]);
 
     supabase
       .from("orders")
-      .select("id,status,total,delivery_fee,payment_method,delivery_address,notes,created_at,order_items(id,quantity,price,products(name))")
+      .select("id,rider_id,status,total,delivery_fee,payment_method,delivery_address,notes,created_at,order_items(id,quantity,price,products(name))")
       .eq("consumer_id", user.id)
       .order("created_at", { ascending: false })
       .then(({ data }) => { setOrders((data as unknown as Order[]) ?? []); setBusy(false); });
