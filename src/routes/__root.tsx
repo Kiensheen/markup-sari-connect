@@ -86,21 +86,27 @@ function RootComponent() {
   const isBareApp = isRiderApp || isAdminApp;
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
     const checkRoleAndRedirect = async () => {
       try {
-        const { data: sessionRes } = await supabase.auth.getSession();
-        const session = (sessionRes as any)?.session ?? (sessionRes as any);
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("[__root] error fetching session:", error);
+          return;
+        }
 
-        if (!session) return;
+        const session = data.session;
+        if (!session?.user) return;
 
-        const { data: roleData, error } = await supabase
+        const { data: roleData, error: roleErr } = await supabase
           .from("user_roles")
           .select("role")
           .eq("user_id", session.user.id)
           .maybeSingle();
 
-        if (error) {
-          console.error("[__root] error fetching user role:", error);
+        if (roleErr) {
+          console.error("[__root] error fetching user role:", roleErr);
           return;
         }
 
@@ -121,6 +127,7 @@ function RootComponent() {
 
     checkRoleAndRedirect();
   }, []);
+
 
   return (
 
