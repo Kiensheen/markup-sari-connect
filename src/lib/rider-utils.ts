@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const STORE_ADDRESS =
   import.meta.env.VITE_MARKUP_STORE_ADDRESS ?? "123 Wholesale Ave, Quezon City, Metro Manila";
 
-/** Active rider statuses (maps accepted → confirmed, out_for_delivery → assigned) */
+/** Active rider statuses that should appear in the rider's "My Active Deliveries" list. */
 export const RIDER_ACTIVE_STATUSES = ["confirmed", "assigned", "picked_up", "out_for_delivery"] as const;
 
 export async function isRider(userId: string): Promise<boolean> {
