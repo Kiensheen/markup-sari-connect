@@ -62,6 +62,50 @@ export type Database = {
         }
         Relationships: []
       }
+      delivery_attempts: {
+        Row: {
+          attempted_at: string | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          order_id: string | null
+          reason_code: string | null
+          reason_text: string | null
+          rider_id: string | null
+          status: string
+        }
+        Insert: {
+          attempted_at?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          reason_code?: string | null
+          reason_text?: string | null
+          rider_id?: string | null
+          status: string
+        }
+        Update: {
+          attempted_at?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          reason_code?: string | null
+          reason_text?: string | null
+          rider_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_attempts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           id: string
@@ -103,9 +147,14 @@ export type Database = {
       }
       orders: {
         Row: {
+          admin_note: string | null
+          archived_at: string | null
           consumer_id: string
           created_at: string
           delivery_address: string | null
+          delivery_failure_at: string | null
+          delivery_failure_notes: string | null
+          delivery_failure_reason: string | null
           delivery_fee: number
           id: string
           notes: string | null
@@ -115,9 +164,14 @@ export type Database = {
           total: number
         }
         Insert: {
+          admin_note?: string | null
+          archived_at?: string | null
           consumer_id: string
           created_at?: string
           delivery_address?: string | null
+          delivery_failure_at?: string | null
+          delivery_failure_notes?: string | null
+          delivery_failure_reason?: string | null
           delivery_fee?: number
           id?: string
           notes?: string | null
@@ -127,9 +181,14 @@ export type Database = {
           total?: number
         }
         Update: {
+          admin_note?: string | null
+          archived_at?: string | null
           consumer_id?: string
           created_at?: string
           delivery_address?: string | null
+          delivery_failure_at?: string | null
+          delivery_failure_notes?: string | null
+          delivery_failure_reason?: string | null
           delivery_fee?: number
           id?: string
           notes?: string | null
@@ -316,6 +375,7 @@ export type Database = {
         | "delivered"
         | "cancelled"
         | "out_for_delivery"
+        | "delivery_failed"
       payment_method: "cod" | "online"
     }
     CompositeTypes: {
@@ -453,6 +513,7 @@ export const Constants = {
         "delivered",
         "cancelled",
         "out_for_delivery",
+        "delivery_failed",
       ],
       payment_method: ["cod", "online"],
     },
