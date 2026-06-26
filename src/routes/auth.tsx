@@ -122,7 +122,10 @@ function AuthPage() {
 
       <p className="text-center text-sm text-muted-foreground">
         {mode === "signin" ? "New here?" : "Already have an account?"}{" "}
-        <button onClick={() => setMode(mode === "signin" ? "signup" : "signin")} className="font-semibold text-primary hover:underline">
+        <button 
+          onClick={() => window.location.href = mode === "signin" ? "/signup" : "/auth"} 
+          className="font-semibold text-primary hover:underline"
+        >
           {mode === "signin" ? "Create account" : "Sign in"}
         </button>
       </p>

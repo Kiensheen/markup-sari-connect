@@ -50,13 +50,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
-      setUser(s?.user ?? null);
       if (s?.user) {
+        console.log("Setting user:", s.user.id);
+        setUser(s.user);
         setTimeout(async () => {
           const { data } = await supabase.from("user_roles").select("role").eq("user_id", s.user.id).maybeSingle();
-          setRole((data?.role as Role) ?? "consumer");
+          const userRole = (data?.role as Role) ?? "consumer";
+          console.log("Setting role:", userRole);
+          setRole(userRole);
         }, 0);
       } else {
+        console.log("Clearing user");
+        setUser(null);
         setRole(null);
       }
     });
@@ -99,6 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role,
         loading,
         signOut: async () => {
+          console.log("Signing out");
           localStorage.removeItem("marketup_remember_me");
           localStorage.removeItem("marketup_remember_me_at");
           await supabase.auth.signOut();

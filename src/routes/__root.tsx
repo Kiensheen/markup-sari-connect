@@ -97,6 +97,9 @@ function RootComponent() {
         }
 
         const session = data.session;
+        const hasSession = !!session?.user;
+        console.log("Root: session exists:", hasSession);
+        
         if (!session?.user) return;
 
         const { data: roleData, error: roleErr } = await supabase
@@ -110,7 +113,8 @@ function RootComponent() {
           return;
         }
 
-        const role = roleData?.role;
+        const role = roleData?.role || "consumer";
+        console.log("Root: role:", role);
         const currentPath = window.location.pathname;
 
         if (role === "admin" && !currentPath.startsWith("/admin")) {

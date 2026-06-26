@@ -16,21 +16,31 @@ function AuthCallback() {
 
   useEffect(() => {
     (async () => {
-      console.log("[auth callback] start");
+      console.log("Callback: processing...");
       setBusy(true);
       setError(null);
 
       try {
-        // Supabase stores the OAuth result in the URL, so we must
-        // fetch the session here after redirect.
+        // Supabase stores the OAuth result in the URL fragment (#access_token=...)
+        // getSession() will automatically parse the fragment and establish the session
         const { data: sessionRes, error: sessionErr } = await supabase.auth.getSession();
-        console.log("[auth callback] getSession", { sessionErr, userId: sessionRes.session?.user?.id });
-        if (sessionErr) throw sessionErr;
-
-        const userId = sessionRes.session?.user?.id;
-        if (!userId) {
-          throw new Error("No active session after OAuth.");
+        
+        const hasSession = !!sessionRes.session;
+        console.log("Callback: session exists:", hasSession);
+        
+        if (sessionErr) {
+          console.error("Callback: session error:", sessionErr);
+          throw sessionErr;
         }
+
+        if (!hasSession) {
+          console.log("Callback: no session found, redirecting to login");
+          navigate({ to: "/auth" });
+          return;
+        }
+
+        const userId = sessionRes.session.user.id;
+        console.log("Callback: user ID:", userId);
 
         // Remember Me for Google sessions too
         const sess = sessionRes.session;
@@ -44,32 +54,38 @@ function AuthCallback() {
         }
 
 
+        // Check user role
         const adminOk = await isAdmin(userId);
-        console.log("[auth callback] isAdmin", { userId, adminOk });
+        console.log("Callback: checking admin role:", adminOk);
+        
         if (adminOk) {
+          console.log("Callback: user role: admin");
           toast.success("Welcome, admin!");
           navigate({ to: "/admin/dashboard" });
           return;
         }
 
         const riderOk = await isRider(userId);
-        console.log("[auth callback] isRider", { userId, riderOk });
+        console.log("Callback: checking rider role:", riderOk);
+        
         if (riderOk) {
+          console.log("Callback: user role: rider");
           toast.success("Welcome, rider!");
           navigate({ to: "/rider/dashboard" });
           return;
         }
 
-        // Default to consumer.
-        // If you want strict checks (role must exist), we can update to query user_roles for consumer.
+        // Default to consumer
+        console.log("Callback: user role: consumer");
         toast.success("Welcome!");
         navigate({ to: "/" });
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Google sign-in failed";
-        console.log("[auth callback] error", e);
+        console.error("Callback: error:", e);
         setError(msg);
         toast.error(msg);
-        navigate({ to: "/auth", search: { error: msg } as any });
+        // Redirect to login page on error
+        navigate({ to: "/auth" });
       } finally {
         setBusy(false);
       }

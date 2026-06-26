@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PointsRouteImport } from './routes/points'
 import { Route as OrdersRouteImport } from './routes/orders'
@@ -37,6 +38,11 @@ import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminConsumersRouteImport } from './routes/admin/consumers'
 import { Route as AdminBottlesRouteImport } from './routes/admin/bottles'
 
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -184,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/orders': typeof OrdersRoute
   '/points': typeof PointsRoute
   '/profile': typeof ProfileRoute
+  '/signup': typeof SignupRoute
   '/admin/bottles': typeof AdminBottlesRoute
   '/admin/consumers': typeof AdminConsumersRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -211,6 +218,7 @@ export interface FileRoutesByTo {
   '/orders': typeof OrdersRoute
   '/points': typeof PointsRoute
   '/profile': typeof ProfileRoute
+  '/signup': typeof SignupRoute
   '/admin/bottles': typeof AdminBottlesRoute
   '/admin/consumers': typeof AdminConsumersRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -241,6 +249,7 @@ export interface FileRoutesById {
   '/orders': typeof OrdersRoute
   '/points': typeof PointsRoute
   '/profile': typeof ProfileRoute
+  '/signup': typeof SignupRoute
   '/admin/bottles': typeof AdminBottlesRoute
   '/admin/consumers': typeof AdminConsumersRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -272,6 +281,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/points'
     | '/profile'
+    | '/signup'
     | '/admin/bottles'
     | '/admin/consumers'
     | '/admin/dashboard'
@@ -299,6 +309,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/points'
     | '/profile'
+    | '/signup'
     | '/admin/bottles'
     | '/admin/consumers'
     | '/admin/dashboard'
@@ -328,6 +339,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/points'
     | '/profile'
+    | '/signup'
     | '/admin/bottles'
     | '/admin/consumers'
     | '/admin/dashboard'
@@ -358,12 +370,20 @@ export interface RootRouteChildren {
   OrdersRoute: typeof OrdersRoute
   PointsRoute: typeof PointsRoute
   ProfileRoute: typeof ProfileRoute
+  SignupRoute: typeof SignupRoute
   AdminLoginRoute: typeof AdminLoginRoute
   RiderLoginRoute: typeof RiderLoginRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -625,6 +645,7 @@ const rootRouteChildren: RootRouteChildren = {
   OrdersRoute: OrdersRoute,
   PointsRoute: PointsRoute,
   ProfileRoute: ProfileRoute,
+  SignupRoute: SignupRoute,
   AdminLoginRoute: AdminLoginRoute,
   RiderLoginRoute: RiderLoginRoute,
 }
