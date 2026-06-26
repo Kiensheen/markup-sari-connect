@@ -67,26 +67,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     const boot = async () => {
-      const rememberedEnabled = rememberMeIsEnabled();
-      const rememberedAt = localStorage.getItem("marketup_remember_me_at");
-
-      if (!rememberedEnabled) {
-        await supabase.auth.signOut();
-      } else if (rememberedAt) {
-        const at = Number(rememberedAt);
-        if (!Number.isFinite(at) || at <= Date.now()) {
-          localStorage.removeItem("marketup_remember_me");
-          localStorage.removeItem("marketup_remember_me_at");
-          await supabase.auth.signOut();
-        }
-      }
-
-
+      console.log("AuthContext: booting...");
+      
+      // First, check if there's already a session (e.g., from OAuth callback)
       const { data } = await supabase.auth.getSession();
       const sess = data.session;
-      setSession(sess);
-      setUser(sess?.user ?? null);
+      
+      console.log("AuthContext: initial session:", sess?.user?.id || "none");
+      
+      // Only check remember me if there's NO active session
+      // This prevents signing out users who just completed OAuth
+      if (!sess?.user) {
+        const rememberedEnabled = rememberMeIsEnabled();
+        const rememberedAt = localStorage.getItem("marketup_remember_me_at");
+
+        if (!rememberedEnabled) {
+          console.log("AuthContext: remember me disabled, signing out");
+          await supabase.auth.signOut();
+        } else if (rememberedAt) {
+          const at = Number(rememberedAt);
+          if (!Number.isFinite(at) || at <= Date.now()) {
+            console.log("AuthContext: remember me expired, signing out");
+            localStorage.removeItem("marketup_remember_me");
+            localStorage.removeItem("marketup_remember_me_at");
+            await supabase.auth.signOut();
+          }
+        }
+      } else {
+        console.log("AuthContext: active session found, skipping remember me check");
+      }
+
+      // Get final session state
+      const { data: finalData } = await supabase.auth.getSession();
+      const finalSession = finalData.session;
+      setSession(finalSession);
+      setUser(finalSession?.user ?? null);
       setLoading(false);
+      
+      console.log("AuthContext: boot complete, user:", finalSession?.user?.id || "none");
     };
 
     boot();
