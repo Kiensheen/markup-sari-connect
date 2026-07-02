@@ -75,26 +75,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log("AuthContext: initial session:", sess?.user?.id || "none");
       
-      // Only check remember me if there's NO active session
-      // This prevents signing out users who just completed OAuth
+      // NOTE: Do NOT auto-signOut here based on the remember-me flag.
+      // On a fresh OAuth callback, Supabase may still be finalizing the
+      // URL-hash session when boot() runs, so getSession() can transiently
+      // return null and a signOut() would fire SIGNED_OUT and kick the user
+      // right back out (this is the "logs in and immediately logs out" bug).
+      // The remember-me flag is now advisory; Supabase's own token expiry
+      // handles stale sessions, and the sign-out button ends sessions explicitly.
       if (!sess?.user) {
-        const rememberedEnabled = rememberMeIsEnabled();
         const rememberedAt = localStorage.getItem("marketup_remember_me_at");
-
-        if (!rememberedEnabled) {
-          console.log("AuthContext: remember me disabled, signing out");
-          await supabase.auth.signOut();
-        } else if (rememberedAt) {
+        if (rememberedAt) {
           const at = Number(rememberedAt);
           if (!Number.isFinite(at) || at <= Date.now()) {
-            console.log("AuthContext: remember me expired, signing out");
             localStorage.removeItem("marketup_remember_me");
             localStorage.removeItem("marketup_remember_me_at");
-            await supabase.auth.signOut();
           }
         }
-      } else {
-        console.log("AuthContext: active session found, skipping remember me check");
       }
 
       // Get final session state
