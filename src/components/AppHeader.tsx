@@ -8,10 +8,15 @@ import { isGuestMode } from "@/lib/mockData";
 export function AppHeader() {
   const { user, signOut } = useAuth();
   const [points, setPoints] = useState<number | null>(null);
+  const guest = isGuestMode();
 
   useEffect(() => {
     if (!user) {
       setPoints(null);
+      return;
+    }
+    if (guest) {
+      setPoints(1250);
       return;
     }
     supabase
@@ -20,7 +25,7 @@ export function AppHeader() {
       .eq("id", user.id)
       .maybeSingle()
       .then(({ data }) => setPoints(data?.points_balance ?? 0));
-  }, [user]);
+  }, [user, guest]);
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur">
