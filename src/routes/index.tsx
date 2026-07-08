@@ -6,6 +6,7 @@ import { useCart } from "@/lib/cart-context";
 import { PRODUCT_CATEGORIES } from "@/lib/constants";
 import { isAdmin } from "@/lib/admin-utils";
 import { isRider } from "@/lib/rider-utils";
+import { isGuestMode, mockProducts } from "@/lib/mockData";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({
@@ -47,9 +48,15 @@ function Index() {
   const { add } = useCart();
 
   useEffect(() => {
+    if (isGuestMode()) {
+      setProducts(mockProducts);
+      setLoading(false);
+      return;
+    }
     supabase.from("products").select("*").order("name").then(({ data, error }) => {
       if (error) toast.error(error.message);
-      setProducts((data as Product[]) ?? []);
+      const rows = (data as Product[]) ?? [];
+      setProducts(rows.length ? rows : mockProducts);
       setLoading(false);
     });
   }, []);

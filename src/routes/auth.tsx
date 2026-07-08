@@ -1,11 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { Rocket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 import { isAdmin } from "@/lib/admin-utils";
 import { isRider } from "@/lib/rider-utils";
 import { toast } from "sonner";
 import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
+import { enableGuestMode } from "@/lib/mockData";
 
 
 export const Route = createFileRoute("/auth")({
@@ -114,6 +116,17 @@ function AuthPage() {
       </form>
 
       <GoogleLoginButton disabled={busy} />
+
+      <button
+        type="button"
+        onClick={() => {
+          enableGuestMode();
+          window.location.href = "/";
+        }}
+        className="flex w-full items-center justify-center gap-2 rounded-lg border border-primary/40 bg-primary/5 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/10"
+      >
+        <Rocket className="h-4 w-4" /> Continue as Guest
+      </button>
 
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
         <div className="h-px flex-1 bg-border" /> or <div className="h-px flex-1 bg-border" />

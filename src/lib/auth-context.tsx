@@ -3,6 +3,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { rememberMeIsEnabled } from "@/lib/remember-me";
 import { APP_VERSION } from "@/lib/constants";
+import { GUEST_USER_KEY, clearGuestMode, guestUser, isGuestMode } from "@/lib/mockData";
 
 const APP_VERSION_KEY = "marketup_app_version";
 
@@ -48,6 +49,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Guest mode short-circuit: skip Supabase entirely.
+    if (isGuestMode()) {
+      const mock = (() => {
+        try { return JSON.parse(localStorage.getItem(GUEST_USER_KEY) || "null") ?? guestUser; }
+        catch { return guestUser; }
+      })();
+      setUser({ id: mock.id, email: mock.email, user_metadata: { name: mock.name } } as unknown as User);
+      setRole("consumer");
+      setLoading(false);
+      return;
+    }
+
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
       if (s?.user) {
@@ -121,7 +134,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log("Signing out");
           localStorage.removeItem("marketup_remember_me");
           localStorage.removeItem("marketup_remember_me_at");
-          await supabase.auth.signOut();
+          const wasGuest = isGuestMode();
+          clearGuestMode();
+          if (!wasGuest) {
+            await supabase.auth.signOut();
+          } else {
+            setUser(null);
+            setRole(null);
+            if (typeof window !== "undefined") window.location.href = "/auth";
+          }
         },
 
       }}

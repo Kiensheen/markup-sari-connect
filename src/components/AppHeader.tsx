@@ -3,14 +3,20 @@ import { Award, LogOut, User as UserIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
+import { isGuestMode } from "@/lib/mockData";
 
 export function AppHeader() {
   const { user, signOut } = useAuth();
   const [points, setPoints] = useState<number | null>(null);
+  const guest = isGuestMode();
 
   useEffect(() => {
     if (!user) {
       setPoints(null);
+      return;
+    }
+    if (guest) {
+      setPoints(1250);
       return;
     }
     supabase
@@ -19,7 +25,7 @@ export function AppHeader() {
       .eq("id", user.id)
       .maybeSingle()
       .then(({ data }) => setPoints(data?.points_balance ?? 0));
-  }, [user]);
+  }, [user, guest]);
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur">
@@ -29,6 +35,11 @@ export function AppHeader() {
           <span className="text-lg font-bold tracking-tight">MarketUp</span>
         </Link>
         <div className="flex items-center gap-2">
+          {guest && (
+            <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-200">
+              Guest
+            </span>
+          )}
           {user && points !== null && (
             <Link
               to="/profile"
