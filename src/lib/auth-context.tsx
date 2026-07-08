@@ -3,7 +3,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { rememberMeIsEnabled } from "@/lib/remember-me";
 import { APP_VERSION } from "@/lib/constants";
-import { GUEST_MODE_KEY, GUEST_USER_KEY, clearGuestMode, guestUser, isGuestMode } from "@/lib/mockData";
+import { GUEST_USER_KEY, clearGuestMode, guestUser, isGuestMode } from "@/lib/mockData";
 
 const APP_VERSION_KEY = "marketup_app_version";
 
