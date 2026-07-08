@@ -3,6 +3,7 @@ import { Award, LogOut, User as UserIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
+import { isGuestMode } from "@/lib/mockData";
 
 export function AppHeader() {
   const { user, signOut } = useAuth();
