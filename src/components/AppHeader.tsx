@@ -35,6 +35,11 @@ export function AppHeader() {
           <span className="text-lg font-bold tracking-tight">MarketUp</span>
         </Link>
         <div className="flex items-center gap-2">
+          {guest && (
+            <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-200">
+              Guest
+            </span>
+          )}
           {user && points !== null && (
             <Link
               to="/profile"
