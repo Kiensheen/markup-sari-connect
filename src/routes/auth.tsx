@@ -1,11 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { Rocket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 import { isAdmin } from "@/lib/admin-utils";
 import { isRider } from "@/lib/rider-utils";
 import { toast } from "sonner";
 import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
+import { enableGuestMode } from "@/lib/mockData";
 
 
 export const Route = createFileRoute("/auth")({
