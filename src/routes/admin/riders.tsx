@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { formatDate, peso } from "@/lib/admin-utils";
+import { useMemo, useState } from "react";
+import { useMock } from "@/contexts/MockContext";
+import { formatDate, peso } from "@/lib/mockData";
 import { Plus, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -9,81 +9,55 @@ export const Route = createFileRoute("/admin/riders")({
   component: AdminRiders,
 });
 
-type Rider = {
-  id: string;
-  name: string | null;
-  email: string | null;
-  phone: string | null;
-  created_at: string;
-};
-
-type Stats = { deliveries: number; earnings: number };
-type DeliveryRow = { id: string; delivery_fee: number; total: number; status: string; created_at: string };
-
 function AdminRiders() {
-  const [rows, setRows] = useState<Rider[]>([]);
-  const [stats, setStats] = useState<Record<string, Stats>>({});
+  const { users, orders, updateUserProfile } = useMock();
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<Rider | null>(null);
-  const [history, setHistory] = useState<DeliveryRow[]>([]);
+  const [selected, setSelected] = useState<(typeof users)[0] | null>(null);
   const [addEmail, setAddEmail] = useState("");
-  const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    const { data: roles } = await supabase.from("user_roles").select("user_id").eq("role", "rider");
-    const ids = (roles ?? []).map((r) => r.user_id as string);
-    if (!ids.length) { setRows([]); setLoading(false); return; }
-    const { data: profs } = await supabase.from("profiles").select("id,name,email,phone,created_at").in("id", ids);
-    const riders = (profs ?? []) as Rider[];
-    setRows(riders);
-
-    const { data: ords } = await supabase.from("orders").select("rider_id,delivery_fee,status").in("rider_id", ids).eq("status", "delivered");
-    const st: Record<string, Stats> = {};
-    ids.forEach((id) => { st[id] = { deliveries: 0, earnings: 0 }; });
-    (ords ?? []).forEach((o) => {
-      const rid = o.rider_id as string;
-      if (!st[rid]) st[rid] = { deliveries: 0, earnings: 0 };
-      st[rid].deliveries += 1;
-      st[rid].earnings += Number(o.delivery_fee ?? 0);
-    });
-    setStats(st);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
+  const riderRows = useMemo(() => users.filter((u) => u.role === "rider"), [users]);
 
   const filtered = useMemo(() => {
     const s = search.toLowerCase().trim();
-    if (!s) return rows;
-    return rows.filter((r) => r.name?.toLowerCase().includes(s) || r.email?.toLowerCase().includes(s));
-  }, [rows, search]);
+    if (!s) return riderRows;
+    return riderRows.filter((r) => r.name?.toLowerCase().includes(s) || r.email?.toLowerCase().includes(s));
+  }, [riderRows, search]);
 
-  const open = async (r: Rider) => {
-    setSelected(r);
-    const { data } = await supabase.from("orders").select("id,delivery_fee,total,status,created_at").eq("rider_id", r.id).order("created_at", { ascending: false });
-    setHistory((data ?? []) as DeliveryRow[]);
-  };
+  const riderStats = useMemo(() => {
+    const stats: Record<string, { deliveries: number; earnings: number }> = {};
+    riderRows.forEach((r) => { stats[r.id] = { deliveries: 0, earnings: 0 }; });
+    orders.filter((o) => o.status === "delivered" && o.rider_id).forEach((o) => {
+      if (stats[o.rider_id!]) {
+        stats[o.rider_id!].deliveries += 1;
+        stats[o.rider_id!].earnings += o.delivery_fee;
+      }
+    });
+    return stats;
+  }, [riderRows, orders]);
 
-  const addRider = async () => {
+  const history = useMemo(() => {
+    if (!selected) return [];
+    return orders
+      .filter((o) => o.rider_id === selected.id)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [orders, selected]);
+
+  const addRider = () => {
     const email = addEmail.trim().toLowerCase();
     if (!email) return;
-    const { data: prof } = await supabase.from("profiles").select("id").eq("email", email).maybeSingle();
-    if (!prof) { toast.error("No user with that email — they must sign up first"); return; }
-    const { error } = await supabase.from("user_roles").insert({ user_id: prof.id, role: "rider" });
-    if (error) { toast.error(error.message); return; }
+    const existing = users.find((u) => u.email === email);
+    if (!existing) { toast.error("No user with that email"); return; }
+    if (existing.role === "rider") { toast.error("Already a rider"); return; }
+    updateUserProfile(existing.id, { role: "rider" });
     toast.success("Rider role added");
     setAddEmail("");
-    load();
   };
 
-  const removeRider = async (id: string) => {
-    if (!confirm("Remove rider role from this user?")) return;
-    const { error } = await supabase.from("user_roles").delete().eq("user_id", id).eq("role", "rider");
-    if (error) { toast.error(error.message); return; }
+  const removeRider = (id: string) => {
+    if (!window.confirm("Remove rider role from this user?")) return;
+    updateUserProfile(id, { role: "consumer" });
     toast.success("Rider role removed");
     setSelected(null);
-    load();
   };
 
   return (
@@ -111,23 +85,20 @@ function AdminRiders() {
               <th className="px-4 py-3">Email</th>
               <th className="px-4 py-3">Deliveries</th>
               <th className="px-4 py-3">Earnings</th>
-              <th className="px-4 py-3">Joined</th>
               <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
-            {loading && <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-500">Loading…</td></tr>}
-            {!loading && !filtered.length && <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-500">No riders</td></tr>}
             {filtered.map((r) => (
               <tr key={r.id} className="border-t border-slate-100">
                 <td className="px-4 py-3 font-medium">{r.name || "—"}</td>
                 <td className="px-4 py-3">{r.email}</td>
-                <td className="px-4 py-3">{stats[r.id]?.deliveries ?? 0}</td>
-                <td className="px-4 py-3">{peso(stats[r.id]?.earnings ?? 0)}</td>
-                <td className="px-4 py-3 text-slate-500">{formatDate(r.created_at)}</td>
-                <td className="px-4 py-3"><button onClick={() => open(r)} className="text-blue-600 hover:underline">View</button></td>
+                <td className="px-4 py-3">{riderStats[r.id]?.deliveries ?? 0}</td>
+                <td className="px-4 py-3">{peso(riderStats[r.id]?.earnings ?? 0)}</td>
+                <td className="px-4 py-3"><button onClick={() => setSelected(r)} className="text-blue-600 hover:underline">View</button></td>
               </tr>
             ))}
+            {!filtered.length && <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-500">No riders</td></tr>}
           </tbody>
         </table>
       </div>
@@ -144,8 +115,8 @@ function AdminRiders() {
             </div>
 
             <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="rounded-lg bg-slate-50 p-3"><div className="text-xs text-slate-500">Deliveries</div><div className="text-xl font-bold">{stats[selected.id]?.deliveries ?? 0}</div></div>
-              <div className="rounded-lg bg-slate-50 p-3"><div className="text-xs text-slate-500">Earnings</div><div className="text-xl font-bold">{peso(stats[selected.id]?.earnings ?? 0)}</div></div>
+              <div className="rounded-lg bg-slate-50 p-3"><div className="text-xs text-slate-500">Deliveries</div><div className="text-xl font-bold">{riderStats[selected.id]?.deliveries ?? 0}</div></div>
+              <div className="rounded-lg bg-slate-50 p-3"><div className="text-xs text-slate-500">Earnings</div><div className="text-xl font-bold">{peso(riderStats[selected.id]?.earnings ?? 0)}</div></div>
             </div>
 
             <div className="mb-4">

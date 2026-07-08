@@ -1,33 +1,10 @@
-import { supabase } from "@/integrations/supabase/client";
+// Rider utilities -- no Supabase dependency.
+// Pure constants and helpers for rider pages.
 
-export const STORE_ADDRESS =
-  import.meta.env.VITE_MARKUP_STORE_ADDRESS ?? "123 Wholesale Ave, Quezon City, Metro Manila";
+import { formatPeso, statusLabel, RIDER_ACTIVE_STATUSES, STORE_ADDRESS } from "@/lib/mockData";
 
-/** Active rider statuses that should appear in the rider's "My Active Deliveries" list. */
-export const RIDER_ACTIVE_STATUSES = ["confirmed", "assigned", "picked_up", "out_for_delivery"] as const;
+export { formatPeso, statusLabel, RIDER_ACTIVE_STATUSES, STORE_ADDRESS };
 
-export async function isRider(userId: string): Promise<boolean> {
-  const { data } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .maybeSingle();
-  return data?.role === "rider";
-}
-
-export function formatPeso(amount: number) {
-  return `₱${Number(amount).toLocaleString()}`;
-}
-
-export function statusLabel(status: string) {
-  const labels: Record<string, string> = {
-    pending: "Pending",
-    confirmed: "Accepted",
-    assigned: "Assigned",
-    picked_up: "Picked up",
-    out_for_delivery: "On the way",
-    delivered: "Delivered",
-    cancelled: "Cancelled",
-  };
-  return labels[status] ?? status.replace("_", " ");
+export async function isRider(_userId: string): Promise<boolean> {
+  return false;
 }

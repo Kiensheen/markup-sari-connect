@@ -1,200 +1,76 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { MapPin, Package, RefreshCw } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
-import { formatPeso, RIDER_ACTIVE_STATUSES, statusLabel, STORE_ADDRESS } from "@/lib/rider-utils";
+import { useMock } from "@/contexts/MockContext";
+import { RIDER_ACTIVE_STATUSES, STORE_ADDRESS } from "@/lib/mockData";
+import { formatPeso, statusLabel } from "@/lib/mockData";
 import { toast } from "sonner";
-import { DeliveryFailureDialog, type DeliveryFailureReasonCode } from "@/components/rider/DeliveryFailureDialog";
-import { DELIVERY_FAILURE_REASON_OPTIONS } from "@/components/rider/DeliveryFailureDialog";
 
-
-interface RiderOrder {
+interface DisplayOrder {
   id: string;
   status: string;
   total: number;
   delivery_fee: number;
   delivery_address: string | null;
   created_at: string;
+  items: { name: string; quantity: number }[];
 }
 
 export function RiderDashboard() {
-  const { user } = useAuth();
-  const [available, setAvailable] = useState<RiderOrder[]>([]);
-  const [active, setActive] = useState<RiderOrder[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { orders, currentUser, acceptDelivery, markPickedUp, markOnTheWay, markDelivered } = useMock();
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [failureOpen, setFailureOpen] = useState(false);
-  const [failureOrderId, setFailureOrderId] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
+  const available: DisplayOrder[] = orders
+    .filter((o) => o.status === "pending" && !o.rider_id)
+    .map((o) => ({ ...o, items: o.items ?? [] }));
 
-  const load = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
+  const active: DisplayOrder[] = orders
+    .filter((o) => o.rider_id === currentUser.id && (RIDER_ACTIVE_STATUSES as readonly string[]).includes(o.status))
+    .map((o) => ({ ...o, items: o.items ?? [] }));
 
-    const [availRes, activeRes] = await Promise.all([
-      supabase
-        .from("orders")
-        .select("id,status,total,delivery_fee,delivery_address,created_at")
-        .eq("status", "pending")
-        .is("rider_id", null)
-        .order("created_at", { ascending: true }),
-      supabase
-        .from("orders")
-        .select("id,status,total,delivery_fee,delivery_address,created_at")
-        .eq("rider_id", user.id)
-        .in("status", [...RIDER_ACTIVE_STATUSES])
-        .order("created_at", { ascending: false }),
-    ]);
+  const refresh = () => {
+    setRefreshKey((k) => k + 1);
+  };
 
-    setAvailable((availRes.data as RiderOrder[]) ?? []);
-    setActive((activeRes.data as RiderOrder[]) ?? []);
-    setLoading(false);
-  }, [user]);
-
-  useEffect(() => { load(); }, [load]);
-
-  const accept = async (orderId: string) => {
-    if (!user) return;
+  const handleAccept = async (orderId: string) => {
     setBusyId(orderId);
-    const { error } = await supabase
-      .from("orders")
-      .update({ rider_id: user.id, status: "confirmed" })
-      .eq("id", orderId)
-      .is("rider_id", null);
+    acceptDelivery(orderId);
     setBusyId(null);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
     toast.success("Delivery accepted!");
-    load();
+    refresh();
   };
 
-  const markPickedUp = async (orderId: string) => {
+  const handlePickedUp = async (orderId: string) => {
     setBusyId(orderId);
-    const { error } = await supabase
-      .from("orders")
-      .update({ status: "picked_up" })
-      .eq("id", orderId);
+    markPickedUp(orderId);
     setBusyId(null);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
     toast.success("Marked as picked up");
-    load();
+    refresh();
   };
 
-
-
-
-
-
-  const markOnTheWay = async (orderId: string) => {
+  const handleOnTheWay = async (orderId: string) => {
     setBusyId(orderId);
-
-
-
-    const { error } = await supabase
-      .from("orders")
-      .update({ status: "out_for_delivery" })
-      .eq("id", orderId);
+    markOnTheWay(orderId);
     setBusyId(null);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
     toast.success("Marked as on the way");
-    load();
+    refresh();
   };
 
-  const markDelivered = async (orderId: string) => {
+  const handleDelivered = async (orderId: string) => {
     setBusyId(orderId);
-    const { error } = await supabase
-      .from("orders")
-      .update({ status: "delivered" })
-      .eq("id", orderId);
+    markDelivered(orderId);
     setBusyId(null);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
     toast.success("Delivery completed!");
-    load();
+    refresh();
   };
-
-  const onConfirmFailure = async ({
-    reasonCode,
-    notes,
-  }: {
-    reasonCode: DeliveryFailureReasonCode;
-    notes: string | null;
-  }) => {
-    if (!user) return;
-    if (!failureOrderId) return;
-
-    const reasonOpt = DELIVERY_FAILURE_REASON_OPTIONS.find((o) => o.code === reasonCode);
-    const reasonText = reasonOpt?.label ?? reasonCode;
-
-    setBusyId(failureOrderId);
-    try {
-      const { error: updateErr } = await supabase
-        .from("orders")
-        .update({
-          status: "delivery_failed",
-          delivery_failure_reason: reasonCode,
-          delivery_failure_notes: notes,
-          delivery_failure_at: new Date().toISOString(),
-        })
-        .eq("id", failureOrderId);
-
-      if (updateErr) throw updateErr;
-
-      const { error: insertErr } = await supabase.from("delivery_attempts").insert({
-        order_id: failureOrderId,
-        rider_id: user.id,
-        status: "failed",
-        reason_code: reasonCode,
-        reason_text: reasonText,
-        notes,
-      });
-
-      if (insertErr) throw insertErr;
-
-      toast.error("Delivery marked as unsuccessful.");
-      setFailureOpen(false);
-      setFailureOrderId(null);
-      load();
-    } catch (e) {
-      const message = e instanceof Error ? e.message : "Failed to submit delivery failure";
-      toast.error(message);
-    } finally {
-      setBusyId(null);
-    }
-  };
-
-  if (loading) {
-    return <p className="py-16 text-center text-muted-foreground">Loading deliveries…</p>;
-  }
 
   return (
-    <div className="space-y-6">
-      <DeliveryFailureDialog
-        open={failureOpen}
-        onOpenChange={(v) => {
-          setFailureOpen(v);
-          if (!v) {
-            setFailureOrderId(null);
-          }
-        }}
-        onConfirm={onConfirmFailure}
-      />
-
+    <div className="space-y-6" key={refreshKey}>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <button
           type="button"
-          onClick={load}
+          onClick={refresh}
           className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-medium hover:bg-muted"
         >
           <RefreshCw className="h-4 w-4" /> Refresh
@@ -217,7 +93,7 @@ export function RiderDashboard() {
               <button
                 type="button"
                 disabled={busyId === o.id}
-                onClick={() => accept(o.id)}
+                onClick={() => handleAccept(o.id)}
                 className="mt-4 w-full rounded-xl bg-primary py-3.5 text-base font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
               >
                 {busyId === o.id ? "Accepting…" : "Accept Delivery"}
@@ -245,7 +121,7 @@ export function RiderDashboard() {
                   <button
                     type="button"
                     disabled={busyId === o.id}
-                    onClick={() => markPickedUp(o.id)}
+                    onClick={() => handlePickedUp(o.id)}
                     className="w-full rounded-xl border-2 border-primary bg-primary/5 py-3.5 text-base font-semibold text-primary hover:bg-primary/10 disabled:opacity-60"
                   >
                     Mark as Picked Up
@@ -255,36 +131,22 @@ export function RiderDashboard() {
                   <button
                     type="button"
                     disabled={busyId === o.id}
-                    onClick={() => markOnTheWay(o.id)}
+                    onClick={() => handleOnTheWay(o.id)}
                     className="w-full rounded-xl bg-primary py-3.5 text-base font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
                   >
                     Mark as On the Way
                   </button>
                 )}
                 {o.status === "out_for_delivery" && (
-                  <>
-                    <button
-                      type="button"
-                      disabled={busyId === o.id}
-                      onClick={() => markDelivered(o.id)}
-                      className="w-full rounded-xl bg-primary py-3.5 text-base font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
-                    >
-                      Mark as Delivered
-                    </button>
-                    <button
-                      type="button"
-                      disabled={busyId === o.id}
-                      onClick={() => {
-                        setFailureOrderId(o.id);
-                        setFailureOpen(true);
-                      }}
-                      className="w-full rounded-xl border-2 border-destructive bg-destructive/5 py-3.5 text-base font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-60"
-                    >
-                      Mark as Unsuccessful
-                    </button>
-                  </>
+                  <button
+                    type="button"
+                    disabled={busyId === o.id}
+                    onClick={() => handleDelivered(o.id)}
+                    className="w-full rounded-xl bg-primary py-3.5 text-base font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                  >
+                    Mark as Delivered
+                  </button>
                 )}
-
               </div>
             </OrderCard>
           ))
@@ -300,7 +162,7 @@ function OrderCard({
   badge,
   children,
 }: {
-  order: RiderOrder;
+  order: DisplayOrder;
   pickup: string;
   badge?: string;
   children: React.ReactNode;
@@ -311,6 +173,13 @@ function OrderCard({
         <div>
           <p className="font-semibold">Order #{order.id.slice(0, 8)}</p>
           <p className="text-xs text-muted-foreground">{new Date(order.created_at).toLocaleString()}</p>
+          {order.items.length > 0 && (
+            <div className="mt-1 text-xs text-muted-foreground">
+              {order.items.map((it, i) => (
+                <span key={i}>{it.name} × {it.quantity}{i < order.items.length - 1 ? ', ' : ''}</span>
+              ))}
+            </div>
+          )}
         </div>
         {badge && (
           <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">

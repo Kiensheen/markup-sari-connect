@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { peso } from "@/lib/admin-utils";
+import { useMemo, useState } from "react";
+import { useMock } from "@/contexts/MockContext";
+import { peso } from "@/lib/mockData";
 import { Plus, Pencil, Trash2, Search, X } from "lucide-react";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { toast } from "sonner";
@@ -10,37 +10,15 @@ export const Route = createFileRoute("/admin/products")({
   component: AdminProducts,
 });
 
-type Product = {
-  id: string;
-  name: string;
-  description: string | null;
-  price: number;
-  wholesale_price: number;
-  stock: number;
-  category: string | null;
-  image_url: string | null;
-};
-
 const CATEGORIES = ["Soft Drinks", "Snacks", "Rice", "Canned Goods", "Dairy", "Other"];
 
 function AdminProducts() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const { products, addProduct, updateProduct, deleteProduct } = useMock();
   const [search, setSearch] = useState("");
   const [cat, setCat] = useState("all");
-  const [editing, setEditing] = useState<Partial<Product> | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<Partial<typeof products[0]> | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    const { data, error } = await supabase.from("products").select("*").order("name");
-    if (error) toast.error(error.message);
-    setProducts((data ?? []) as Product[]);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
 
   const filtered = useMemo(() => {
     const s = search.toLowerCase().trim();
@@ -51,7 +29,7 @@ function AdminProducts() {
     });
   }, [products, search, cat]);
 
-  const save = async () => {
+  const save = () => {
     if (!editing) return;
     const payload = {
       name: editing.name ?? "",
@@ -63,25 +41,25 @@ function AdminProducts() {
       image_url: editing.image_url ?? null,
     };
     if (!payload.name) { toast.error("Name required"); return; }
-    const { error } = editing.id
-      ? await supabase.from("products").update(payload).eq("id", editing.id)
-      : await supabase.from("products").insert(payload);
-    if (error) { toast.error(error.message); return; }
+    if (editing.id) {
+      updateProduct({ ...payload, id: editing.id });
+    } else {
+      addProduct(payload);
+    }
     toast.success("Saved");
     setEditing(null);
-    load();
   };
 
-  const remove = async () => {
+  const remove = () => {
     if (!deleteId) return;
     setDeleting(true);
-    const { error } = await supabase.from("products").delete().eq("id", deleteId);
+    deleteProduct(deleteId);
     setDeleting(false);
-    if (error) { toast.error(error.message); return; }
     toast.success("Product deleted");
     setDeleteId(null);
-    load();
   };
+
+  const inp = "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-900";
 
   return (
     <div>
@@ -117,8 +95,6 @@ function AdminProducts() {
             </tr>
           </thead>
           <tbody>
-            {loading && <tr><td colSpan={7} className="px-4 py-6 text-center text-slate-500">Loading…</td></tr>}
-            {!loading && !filtered.length && <tr><td colSpan={7} className="px-4 py-6 text-center text-slate-500">No products</td></tr>}
             {filtered.map((p) => (
               <tr key={p.id} className="border-t border-slate-100">
                 <td className="px-4 py-3">
@@ -135,6 +111,7 @@ function AdminProducts() {
                 </td>
               </tr>
             ))}
+            {!filtered.length && <tr><td colSpan={7} className="px-4 py-6 text-center text-slate-500">No products</td></tr>}
           </tbody>
         </table>
       </div>
@@ -181,7 +158,6 @@ function AdminProducts() {
   );
 }
 
-const inp = "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-900";
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">

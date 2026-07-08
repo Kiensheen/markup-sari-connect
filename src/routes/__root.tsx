@@ -7,13 +7,10 @@ import {
   Scripts,
   useRouterState,
 } from "@tanstack/react-router";
-import { type ReactNode, useEffect } from "react";
-
-import { supabase } from "@/integrations/supabase/client";
-
+import { type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { AuthProvider } from "@/lib/auth-context";
+import { MockProvider } from "@/contexts/MockContext";
 import { CartProvider } from "@/lib/cart-context";
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
@@ -85,58 +82,9 @@ function RootComponent() {
   const isAdminApp = location.pathname.startsWith("/admin");
   const isBareApp = isRiderApp || isAdminApp;
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const checkRoleAndRedirect = async () => {
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error("[__root] error fetching session:", error);
-          return;
-        }
-
-        const session = data.session;
-        const hasSession = !!session?.user;
-        console.log("Root: session exists:", hasSession);
-        
-        if (!session?.user) return;
-
-        const { data: roleData, error: roleErr } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .maybeSingle();
-
-        if (roleErr) {
-          console.error("[__root] error fetching user role:", roleErr);
-          return;
-        }
-
-        const role = roleData?.role || "consumer";
-        console.log("Root: role:", role);
-        const currentPath = window.location.pathname;
-
-        if (role === "admin" && !currentPath.startsWith("/admin")) {
-          window.location.href = "/admin/dashboard";
-        } else if (role === "rider" && !currentPath.startsWith("/rider")) {
-          window.location.href = "/rider/dashboard";
-        } else if (!role && currentPath.startsWith("/admin")) {
-          window.location.href = "/";
-        }
-      } catch (err) {
-        console.error("[__root] role redirect error:", err);
-      }
-    };
-
-    checkRoleAndRedirect();
-  }, []);
-
-
   return (
-
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
+      <MockProvider>
         <CartProvider>
           {isBareApp ? (
             <Outlet />
@@ -151,7 +99,7 @@ function RootComponent() {
           )}
           <Toaster />
         </CartProvider>
-      </AuthProvider>
+      </MockProvider>
     </QueryClientProvider>
   );
 }

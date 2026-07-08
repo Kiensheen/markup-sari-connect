@@ -1,25 +1,11 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { Package, Plus, Search } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useCart } from "@/lib/cart-context";
-import { PRODUCT_CATEGORIES } from "@/lib/constants";
-import { isAdmin } from "@/lib/admin-utils";
-import { isRider } from "@/lib/rider-utils";
-import { isGuestMode, mockProducts } from "@/lib/mockData";
+import { useMock } from "@/contexts/MockContext";
+import { PRODUCT_CATEGORIES } from "@/lib/mockData";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({
-  beforeLoad: async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return;
-    if (await isAdmin(session.user.id)) {
-      throw redirect({ to: "/admin/dashboard" });
-    }
-    if (await isRider(session.user.id)) {
-      throw redirect({ to: "/rider/dashboard" });
-    }
-  },
   head: () => ({
     meta: [
       { title: "MarketUp — Shop wholesale" },
@@ -29,37 +15,10 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-interface Product {
-  id: string;
-  name: string;
-  description: string | null;
-  price: number;
-  wholesale_price: number;
-  stock: number;
-  category: string | null;
-  image_url: string | null;
-}
-
 function Index() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { products, addToCart } = useMock();
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string>("All");
-  const { add } = useCart();
-
-  useEffect(() => {
-    if (isGuestMode()) {
-      setProducts(mockProducts);
-      setLoading(false);
-      return;
-    }
-    supabase.from("products").select("*").order("name").then(({ data, error }) => {
-      if (error) toast.error(error.message);
-      const rows = (data as Product[]) ?? [];
-      setProducts(rows.length ? rows : mockProducts);
-      setLoading(false);
-    });
-  }, []);
 
   const filtered = useMemo(() => products.filter((p) => {
     const matchQ = !q || p.name.toLowerCase().includes(q.toLowerCase());
@@ -67,8 +26,8 @@ function Index() {
     return matchQ && matchC;
   }), [products, q, cat]);
 
-  const handleAdd = (p: Product) => {
-    add({ id: p.id, name: p.name, price: Number(p.wholesale_price), image_url: p.image_url });
+  const handleAdd = (p: typeof products[0]) => {
+    addToCart(p);
     toast.success(`${p.name} added to cart`);
   };
 
@@ -105,44 +64,36 @@ function Index() {
         ))}
       </div>
 
-      {loading ? (
-        <div className="grid grid-cols-2 gap-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-56 animate-pulse rounded-xl bg-muted" />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {filtered.map((p) => (
-            <div key={p.id} className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition hover:shadow-md">
-              <div className="flex aspect-square w-full items-center justify-center overflow-hidden bg-muted">
-                {p.image_url ? (
-                  <img src={p.image_url} alt={p.name} loading="lazy" className="h-full w-full object-cover transition group-hover:scale-105" />
-                ) : (
-                  <Package className="h-10 w-10 text-muted-foreground/40" />
-                )}
-              </div>
-              <div className="flex flex-1 flex-col gap-2 p-3">
-                <h3 className="line-clamp-2 text-sm font-semibold leading-snug">{p.name}</h3>
-                <div className="mt-auto">
-                  <div className="text-xs text-muted-foreground">Wholesale</div>
-                  <div className="text-base font-bold text-primary">₱{Number(p.wholesale_price).toLocaleString()}</div>
-                </div>
-                <button
-                  onClick={() => handleAdd(p)}
-                  disabled={p.stock <= 0}
-                  className="flex items-center justify-center gap-1 rounded-lg bg-primary px-2 py-2 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
-                >
-                  <Plus className="h-3.5 w-3.5" /> Add to Cart
-                </button>
-              </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {filtered.map((p) => (
+          <div key={p.id} className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition hover:shadow-md">
+            <div className="flex aspect-square w-full items-center justify-center overflow-hidden bg-muted">
+              {p.image_url ? (
+                <img src={p.image_url} alt={p.name} loading="lazy" className="h-full w-full object-cover transition group-hover:scale-105" />
+              ) : (
+                <Package className="h-10 w-10 text-muted-foreground/40" />
+              )}
             </div>
-          ))}
-          {filtered.length === 0 && (
-            <p className="col-span-full py-10 text-center text-sm text-muted-foreground">No products found.</p>
-          )}
-        </div>
-      )}
+            <div className="flex flex-1 flex-col gap-2 p-3">
+              <h3 className="line-clamp-2 text-sm font-semibold leading-snug">{p.name}</h3>
+              <div className="mt-auto">
+                <div className="text-xs text-muted-foreground">Wholesale</div>
+                <div className="text-base font-bold text-primary">₱{Number(p.wholesale_price).toLocaleString()}</div>
+              </div>
+              <button
+                onClick={() => handleAdd(p)}
+                disabled={p.stock <= 0}
+                className="flex items-center justify-center gap-1 rounded-lg bg-primary px-2 py-2 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
+              >
+                <Plus className="h-3.5 w-3.5" /> Add to Cart
+              </button>
+            </div>
+          </div>
+        ))}
+        {filtered.length === 0 && (
+          <p className="col-span-full py-10 text-center text-sm text-muted-foreground">No products found.</p>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
-import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, LogOut, User, Wallet } from "lucide-react";
-import { useAuth } from "@/lib/auth-context";
+import { Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { LayoutDashboard, User, Wallet } from "lucide-react";
+import { RoleSwitcher } from "@/components/RoleSwitcher";
 
 const tabs = [
   { to: "/rider/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -10,13 +10,6 @@ const tabs = [
 
 export function RiderLayout() {
   const { location } = useRouterState();
-  const { signOut } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    await signOut();
-    navigate({ to: "/rider/login" });
-  };
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -26,14 +19,7 @@ export function RiderLayout() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">M</div>
             <span className="font-bold">MarketUp Rider</span>
           </div>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </button>
+          <RoleSwitcher />
         </div>
       </header>
 

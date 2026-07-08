@@ -1,9 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { Award, Camera, Gift, LogOut, User as UserIcon } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
-import { REDEEM_REWARD } from "@/lib/constants";
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { Award, Gift, User as UserIcon } from "lucide-react";
+import { useMock } from "@/contexts/MockContext";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -18,207 +16,62 @@ export const Route = createFileRoute("/profile")({
   component: ProfilePage,
 });
 
-interface Txn {
-  id: string;
-  points_earned: number;
-  points_redeemed: number;
-  source: string;
-  created_at: string;
-}
-
-interface Profile {
-  name: string | null;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
-  points_balance: number;
-  first_name?: string | null;
-  middle_name?: string | null;
-  last_name?: string | null;
-  province?: string | null;
-  city?: string | null;
-  barangay?: string | null;
-  street?: string | null;
-  avatar_url?: string | null;
-}
+const REDEEM_COST = 500;
+const REDEEM_NAME = "₱50 off coupon";
+const REDEEM_VALUE = 50;
 
 function ProfilePage() {
-  const { user, loading, signOut } = useAuth();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [txns, setTxns] = useState<Txn[]>([]);
+  const { currentUser, updateUserProfile, adjustPoints } = useMock();
   const [redeemOpen, setRedeemOpen] = useState(false);
   const [redeeming, setRedeeming] = useState(false);
-  const [avatarSignedUrl, setAvatarSignedUrl] = useState<string | null>(null);
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [editMode, setEditMode] = useState(false);
   const [saveBusy, setSaveBusy] = useState(false);
 
-  const [editFirstName, setEditFirstName] = useState("");
-  const [editMiddleName, setEditMiddleName] = useState("");
-  const [editLastName, setEditLastName] = useState("");
-  const [editPhone, setEditPhone] = useState("");
-  const [editProvince, setEditProvince] = useState("");
-  const [editCity, setEditCity] = useState("");
-  const [editBarangay, setEditBarangay] = useState("");
-  const [editStreet, setEditStreet] = useState("");
+  const [editName, setEditName] = useState(currentUser.name);
+  const [editPhone, setEditPhone] = useState(currentUser.phone);
+  const [editAddress, setEditAddress] = useState(currentUser.address);
 
+  const txns = [
+    { id: 't1', source: 'Order #o1 completed', points_earned: 2, points_redeemed: 0, created_at: '2026-07-01T10:00:00Z' },
+    { id: 't2', source: 'Order #o3 completed', points_earned: 2, points_redeemed: 0, created_at: '2026-07-03T09:15:00Z' },
+    { id: 't3', source: 'Signup bonus', points_earned: 50, points_redeemed: 0, created_at: '2026-01-15T08:00:00Z' },
+  ];
 
-  const refresh = async () => {
-    if (!user) return;
-    const { data: prof } = await supabase
-      .from("profiles")
-      .select("name,email,phone,address,points_balance,first_name,middle_name,last_name,province,city,barangay,street,avatar_url")
-      .eq("id", user.id)
-      .maybeSingle();
-    const p = prof as Profile | null;
-    setProfile(p);
-    if (p?.avatar_url) {
-      const { data: signed } = await supabase.storage.from("avatars").createSignedUrl(p.avatar_url, 60 * 60);
-      setAvatarSignedUrl(signed?.signedUrl ?? null);
-    } else {
-      setAvatarSignedUrl(null);
-    }
-    if (p) {
-      setEditFirstName(p.first_name ?? "");
-      setEditMiddleName(p.middle_name ?? "");
-      setEditLastName(p.last_name ?? "");
-      setEditPhone(p.phone ?? "");
-      setEditProvince(p.province ?? "");
-      setEditCity(p.city ?? "");
-      setEditBarangay(p.barangay ?? "");
-      setEditStreet(p.street ?? "");
-    }
-    const { data } = await supabase
-      .from("points_transactions")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(20);
-    setTxns((data as Txn[]) ?? []);
-  };
-
-  useEffect(() => { refresh(); }, [user]);
-
-  const saveProfile = async () => {
-    if (!user) return;
-    if (!editFirstName.trim() || !editLastName.trim() || !editPhone.trim()) {
-      toast.error("First name, last name, and phone are required");
+  const saveProfile = () => {
+    if (!editName.trim() || !editPhone.trim()) {
+      toast.error("Name and phone are required");
       return;
     }
     setSaveBusy(true);
-    const fullName = [editFirstName, editMiddleName, editLastName].filter(Boolean).join(" ").trim();
-    const address = [editStreet, editBarangay, editCity, editProvince].filter(Boolean).join(", ");
-    const updates: Record<string, unknown> = {
-      first_name: editFirstName.trim(),
-      middle_name: editMiddleName.trim() || null,
-      last_name: editLastName.trim(),
-      phone: editPhone.trim(),
-      province: editProvince.trim() || null,
-      city: editCity.trim() || null,
-      barangay: editBarangay.trim() || null,
-      street: editStreet.trim() || null,
-      name: fullName,
-      address: address || null,
-    };
-    const { error } = await supabase.from("profiles").update(updates).eq("id", user.id);
+    updateUserProfile(currentUser.id, { name: editName.trim(), phone: editPhone.trim(), address: editAddress.trim() });
     setSaveBusy(false);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Profile updated successfully");
+    toast.success("Profile updated");
     setEditMode(false);
-    refresh();
   };
 
-  const handleAvatarFile = async (file: File | null) => {
-    if (!file || !user) return;
-    if (!file.type.startsWith("image/")) { toast.error("Please choose an image file"); return; }
-    if (file.size > 5 * 1024 * 1024) { toast.error("Image must be under 5MB"); return; }
-    setUploadingAvatar(true);
-    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-    const path = `${user.id}/avatar-${Date.now()}.${ext}`;
-    const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
-    if (upErr) { setUploadingAvatar(false); toast.error(upErr.message); return; }
-    const { error: dbErr } = await supabase.from("profiles").update({ avatar_url: path }).eq("id", user.id);
-    setUploadingAvatar(false);
-    if (dbErr) { toast.error(dbErr.message); return; }
-    toast.success("Profile photo updated");
-    refresh();
-  };
-
-
-  const handleRedeem = async () => {
-    if (!user || !profile) return;
-    if (profile.points_balance < REDEEM_REWARD.cost) {
+  const handleRedeem = () => {
+    if (currentUser.points < REDEEM_COST) {
       toast.error("Not enough points");
       return;
     }
     setRedeeming(true);
-    const { error } = await supabase.rpc("redeem_points", {
-      _cost: REDEEM_REWARD.cost,
-      _source: `Redeemed: ${REDEEM_REWARD.name}`,
-    });
+    adjustPoints(currentUser.id, -REDEEM_COST);
     setRedeeming(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    toast.success(`Redeemed ${REDEEM_REWARD.name}! Use it on your next order.`);
+    toast.success(`Redeemed ${REDEEM_NAME}!`);
     setRedeemOpen(false);
-    refresh();
   };
-
-  if (loading) return <p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>;
-  if (!user) return (
-    <div className="py-16 text-center">
-      <h2 className="text-xl font-semibold">Sign in to view your profile</h2>
-      <Link to="/auth" className="mt-6 inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Sign in</Link>
-    </div>
-  );
-
-  const balance = profile?.points_balance ?? 0;
 
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5">
-        <div className="relative">
-          {avatarSignedUrl ? (
-            <img src={avatarSignedUrl} alt="Profile" className="h-16 w-16 rounded-full object-cover" />
-          ) : (
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-xl font-bold text-primary-foreground">
-              {(profile?.name ?? user.email ?? "U").charAt(0).toUpperCase()}
-            </div>
-          )}
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploadingAvatar}
-            aria-label="Upload photo"
-            className="absolute -bottom-1 -right-1 inline-flex h-7 w-7 items-center justify-center rounded-full border border-border bg-background text-foreground shadow hover:bg-muted disabled:opacity-60"
-          >
-            <Camera className="h-3.5 w-3.5" />
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={(e) => { void handleAvatarFile(e.target.files?.[0] ?? null); e.target.value = ""; }}
-          />
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-xl font-bold text-primary-foreground">
+          {currentUser.name.charAt(0).toUpperCase()}
         </div>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-xl font-bold">{profile?.name ?? "Store Owner"}</h1>
-          <p className="truncate text-sm text-muted-foreground">{profile?.email ?? user.email}</p>
-          {profile?.phone && <p className="text-xs text-muted-foreground">{profile.phone}</p>}
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploadingAvatar}
-            className="mt-1 text-xs font-medium text-primary hover:underline disabled:opacity-60"
-          >
-            {uploadingAvatar ? "Uploading…" : avatarSignedUrl ? "Change photo" : "Upload photo"}
-          </button>
+          <h1 className="truncate text-xl font-bold">{currentUser.name}</h1>
+          <p className="truncate text-sm text-muted-foreground">{currentUser.email}</p>
+          {currentUser.phone && <p className="text-xs text-muted-foreground">{currentUser.phone}</p>}
         </div>
       </div>
 
@@ -228,13 +81,13 @@ function ProfilePage() {
             <div className="flex items-center gap-2 text-sm text-primary-foreground/90">
               <Award className="h-4 w-4" /> Points Balance
             </div>
-            <p className="mt-1 text-4xl font-bold">{balance.toLocaleString()}</p>
+            <p className="mt-1 text-4xl font-bold">{currentUser.points.toLocaleString()}</p>
             <p className="mt-1 text-xs text-primary-foreground/80">Earn 1 point for every ₱100 spent</p>
           </div>
           <button
             type="button"
             onClick={() => setRedeemOpen(true)}
-            disabled={balance < REDEEM_REWARD.cost}
+            disabled={currentUser.points < REDEEM_COST}
             className="rounded-lg bg-white/20 px-4 py-2 text-sm font-semibold backdrop-blur hover:bg-white/30 disabled:opacity-50"
           >
             Redeem
@@ -250,7 +103,12 @@ function ProfilePage() {
           {!editMode ? (
             <button
               type="button"
-              onClick={() => setEditMode(true)}
+              onClick={() => {
+                setEditName(currentUser.name);
+                setEditPhone(currentUser.phone);
+                setEditAddress(currentUser.address);
+                setEditMode(true);
+              }}
               className="rounded-md border border-border px-3 py-1 text-xs font-medium hover:bg-muted"
             >
               Edit
@@ -259,7 +117,7 @@ function ProfilePage() {
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => { setEditMode(false); refresh(); }}
+                onClick={() => setEditMode(false)}
                 className="rounded-md border border-border px-3 py-1 text-xs font-medium hover:bg-muted"
               >
                 Cancel
@@ -279,64 +137,46 @@ function ProfilePage() {
           <dl className="space-y-2 text-sm">
             <div className="flex justify-between gap-4">
               <dt className="text-muted-foreground">Name</dt>
-              <dd className="text-right">{[profile?.first_name, profile?.middle_name, profile?.last_name].filter(Boolean).join(" ") || profile?.name || "Not set"}</dd>
+              <dd className="text-right">{currentUser.name}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">Email</dt>
+              <dd className="text-right">{currentUser.email}</dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-muted-foreground">Phone</dt>
-              <dd className="text-right">{profile?.phone ?? "Not set"}</dd>
+              <dd className="text-right">{currentUser.phone || "Not set"}</dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-muted-foreground">Address</dt>
-              <dd className="text-right">{profile?.address ?? "Not set"}</dd>
+              <dd className="text-right">{currentUser.address || "Not set"}</dd>
             </div>
           </dl>
         ) : (
           <div className="space-y-2 text-sm">
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              <input value={editFirstName} onChange={(e) => setEditFirstName(e.target.value)} placeholder="First name *" className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-              <input value={editMiddleName} onChange={(e) => setEditMiddleName(e.target.value)} placeholder="Middle name" className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-              <input value={editLastName} onChange={(e) => setEditLastName(e.target.value)} placeholder="Last name *" className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-            </div>
+            <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Full name *" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
             <input type="tel" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} placeholder="Phone *" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <input value={editProvince} onChange={(e) => setEditProvince(e.target.value)} placeholder="Province" className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-              <input value={editCity} onChange={(e) => setEditCity(e.target.value)} placeholder="City" className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-              <input value={editBarangay} onChange={(e) => setEditBarangay(e.target.value)} placeholder="Barangay" className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-              <input value={editStreet} onChange={(e) => setEditStreet(e.target.value)} placeholder="Street" className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-            </div>
-            <p className="text-xs text-muted-foreground">* required</p>
+            <textarea value={editAddress} onChange={(e) => setEditAddress(e.target.value)} placeholder="Address" rows={2} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
           </div>
         )}
       </section>
 
       <section>
         <h2 className="mb-2 font-semibold">Points history</h2>
-        {txns.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No activity yet. Place an order to start earning!</p>
-        ) : (
-          <div className="space-y-1.5">
-            {txns.map((t) => (
-              <div key={t.id} className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-sm">
-                <div>
-                  <p className="font-medium">{t.source}</p>
-                  <p className="text-xs text-muted-foreground">{new Date(t.created_at).toLocaleDateString()}</p>
-                </div>
-                <span className={`font-semibold ${t.points_earned > 0 ? "text-success" : "text-destructive"}`}>
-                  {t.points_earned > 0 ? `+${t.points_earned}` : `-${t.points_redeemed}`}
-                </span>
+        <div className="space-y-1.5">
+          {txns.map((t) => (
+            <div key={t.id} className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-sm">
+              <div>
+                <p className="font-medium">{t.source}</p>
+                <p className="text-xs text-muted-foreground">{new Date(t.created_at).toLocaleDateString()}</p>
               </div>
-            ))}
-          </div>
-        )}
+              <span className={`font-semibold ${t.points_earned > 0 ? "text-green-600" : "text-red-600"}`}>
+                {t.points_earned > 0 ? `+${t.points_earned}` : `-${t.points_redeemed}`}
+              </span>
+            </div>
+          ))}
+        </div>
       </section>
-
-      <button
-        type="button"
-        onClick={signOut}
-        className="flex w-full items-center justify-center gap-2 rounded-lg border border-border py-3 text-sm font-medium text-destructive hover:bg-destructive/5"
-      >
-        <LogOut className="h-4 w-4" /> Sign out
-      </button>
 
       <Dialog open={redeemOpen} onOpenChange={setRedeemOpen}>
         <DialogContent className="max-w-sm">
@@ -349,12 +189,12 @@ function ProfilePage() {
           <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
             <div className="rounded-lg bg-primary-soft p-2 text-primary"><Gift className="h-6 w-6" /></div>
             <div className="flex-1">
-              <p className="font-semibold">{REDEEM_REWARD.name}</p>
-              <p className="text-sm text-muted-foreground">{REDEEM_REWARD.cost} points = ₱{REDEEM_REWARD.value} off</p>
+              <p className="font-semibold">{REDEEM_NAME}</p>
+              <p className="text-sm text-muted-foreground">{REDEEM_COST} points = ₱{REDEEM_VALUE} off</p>
             </div>
           </div>
           <p className="text-sm text-muted-foreground">
-            Your balance: <span className="font-semibold text-foreground">{balance.toLocaleString()} pts</span>
+            Your balance: <span className="font-semibold text-foreground">{currentUser.points.toLocaleString()} pts</span>
           </p>
           <DialogFooter>
             <button
@@ -367,7 +207,7 @@ function ProfilePage() {
             <button
               type="button"
               onClick={handleRedeem}
-              disabled={redeeming || balance < REDEEM_REWARD.cost}
+              disabled={redeeming || currentUser.points < REDEEM_COST}
               className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
               {redeeming ? "Redeeming…" : "Confirm redeem"}

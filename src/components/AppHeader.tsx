@@ -1,62 +1,27 @@
 import { Link } from "@tanstack/react-router";
-import { Award, LogOut, User as UserIcon } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useAuth } from "@/lib/auth-context";
-import { supabase } from "@/integrations/supabase/client";
-import { isGuestMode } from "@/lib/mockData";
+import { Award } from "lucide-react";
+import { useMock } from "@/contexts/MockContext";
+import { RoleSwitcher } from "@/components/RoleSwitcher";
 
 export function AppHeader() {
-  const { user, signOut } = useAuth();
-  const [points, setPoints] = useState<number | null>(null);
-  const guest = isGuestMode();
-
-  useEffect(() => {
-    if (!user) {
-      setPoints(null);
-      return;
-    }
-    if (guest) {
-      setPoints(1250);
-      return;
-    }
-    supabase
-      .from("profiles")
-      .select("points_balance")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => setPoints(data?.points_balance ?? 0));
-  }, [user, guest]);
+  const { role, currentUser } = useMock();
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur">
       <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
-<Link to="/" className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-bold text-primary-foreground">M</div>
           <span className="text-lg font-bold tracking-tight">MarketUp</span>
         </Link>
         <div className="flex items-center gap-2">
-          {guest && (
-            <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-200">
-              Guest
-            </span>
-          )}
-          {user && points !== null && (
+          <RoleSwitcher />
+          {role === 'consumer' && currentUser.points > 0 && (
             <Link
               to="/profile"
               className="flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary hover:bg-primary/15"
             >
               <Award className="h-3.5 w-3.5" />
-              {points.toLocaleString()} pts
-            </Link>
-          )}
-          {user ? (
-            <button onClick={signOut} className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground">
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">Sign out</span>
-            </button>
-          ) : (
-            <Link to="/auth" className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground">
-              <UserIcon className="h-4 w-4" /> Sign in
+              {currentUser.points.toLocaleString()} pts
             </Link>
           )}
         </div>
