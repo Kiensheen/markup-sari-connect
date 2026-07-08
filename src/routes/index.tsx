@@ -48,9 +48,15 @@ function Index() {
   const { add } = useCart();
 
   useEffect(() => {
+    if (isGuestMode()) {
+      setProducts(mockProducts);
+      setLoading(false);
+      return;
+    }
     supabase.from("products").select("*").order("name").then(({ data, error }) => {
       if (error) toast.error(error.message);
-      setProducts((data as Product[]) ?? []);
+      const rows = (data as Product[]) ?? [];
+      setProducts(rows.length ? rows : mockProducts);
       setLoading(false);
     });
   }, []);
