@@ -6,6 +6,7 @@ import { useCart } from "@/lib/cart-context";
 import { PRODUCT_CATEGORIES } from "@/lib/constants";
 import { isAdmin } from "@/lib/admin-utils";
 import { isRider } from "@/lib/rider-utils";
+import { isGuestMode, mockProducts } from "@/lib/mockData";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({
