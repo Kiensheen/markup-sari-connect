@@ -49,6 +49,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Guest mode short-circuit: skip Supabase entirely.
+    if (isGuestMode()) {
+      const mock = (() => {
+        try { return JSON.parse(localStorage.getItem(GUEST_USER_KEY) || "null") ?? guestUser; }
+        catch { return guestUser; }
+      })();
+      setUser({ id: mock.id, email: mock.email, user_metadata: { name: mock.name } } as unknown as User);
+      setRole("consumer");
+      setLoading(false);
+      return;
+    }
+
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
       if (s?.user) {
