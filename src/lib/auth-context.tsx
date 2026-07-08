@@ -134,7 +134,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log("Signing out");
           localStorage.removeItem("marketup_remember_me");
           localStorage.removeItem("marketup_remember_me_at");
-          await supabase.auth.signOut();
+          const wasGuest = isGuestMode();
+          clearGuestMode();
+          if (!wasGuest) {
+            await supabase.auth.signOut();
+          } else {
+            setUser(null);
+            setRole(null);
+            if (typeof window !== "undefined") window.location.href = "/auth";
+          }
         },
 
       }}
