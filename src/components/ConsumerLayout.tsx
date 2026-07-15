@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, ShoppingCart, Package, User, Award } from "lucide-react";
+import { Home, ShoppingCart, Package, User } from "lucide-react";
 import { useMock } from "@/contexts/MockContext";
 
 const tabs = [
@@ -11,7 +11,7 @@ const tabs = [
 
 export function ConsumerLayout({ children }: { children: React.ReactNode }) {
   const { location } = useRouterState();
-  const { currentUser, cartCount } = useMock();
+  const { cartCount } = useMock();
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
@@ -22,15 +22,13 @@ export function ConsumerLayout({ children }: { children: React.ReactNode }) {
             <span className="text-lg font-bold tracking-tight">MarketUp</span>
           </Link>
           <div className="flex items-center gap-3">
-            {currentUser.points > 0 && (
-              <Link
-                to="/profile"
-                className="flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary hover:bg-primary/15"
-              >
-                <Award className="h-3.5 w-3.5" />
-                {currentUser.points.toLocaleString()} pts
-              </Link>
-            )}
+            <Link
+              to="/profile"
+              className="flex items-center justify-center rounded-full bg-primary/10 p-2 text-primary hover:bg-primary/15"
+              aria-label="Profile"
+            >
+              <User className="h-4 w-4" />
+            </Link>
             <Link to="/rider/dashboard" className="text-xs text-muted-foreground hover:text-foreground">Rider</Link>
             <Link to="/admin/dashboard" className="text-xs text-muted-foreground hover:text-foreground">Admin</Link>
           </div>
