@@ -1,6 +1,5 @@
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useMock } from "@/contexts/MockContext";
-import { RoleSwitcher } from "@/components/RoleSwitcher";
 
 const links = [
   { to: "/admin/dashboard", label: "Dashboard", emoji: "📊" },
@@ -57,7 +56,8 @@ export function AdminLayout() {
           <div className="hidden md:block" />
 
           <div className="flex items-center gap-2">
-            <RoleSwitcher />
+            <Link to="/" className="text-xs text-muted-foreground hover:text-foreground">Consumer</Link>
+            <Link to="/rider/dashboard" className="text-xs text-muted-foreground hover:text-foreground">Rider</Link>
             <div className="hidden items-center gap-2 sm:flex">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">{initials}</div>
               <span className="max-w-[140px] truncate text-sm font-medium">{currentUser.name}</span>

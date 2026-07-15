@@ -1,8 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Bell, Package } from "lucide-react";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { LOW_STOCK_THRESHOLD } from "@/lib/admin-utils";
+import { useMock } from "@/contexts/MockContext";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -22,35 +20,27 @@ interface Notification {
 }
 
 export function AdminNotifications() {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const { orders, products } = useMock();
 
-  useEffect(() => {
-    (async () => {
-      const [pendingRes, stockRes] = await Promise.all([
-        supabase.from("orders").select("id,created_at").eq("status", "pending").order("created_at", { ascending: false }).limit(5),
-        supabase.from("products").select("id,name,stock").lte("stock", LOW_STOCK_THRESHOLD).order("stock").limit(5),
-      ]);
+  const LOW_STOCK_THRESHOLD = 10;
 
-      const items: Notification[] = [];
-      (pendingRes.data ?? []).forEach((o) => {
-        items.push({
-          id: `order-${o.id}`,
-          type: "order",
-          message: `New pending order #${o.id.slice(0, 8)}`,
-          href: "/admin/orders",
-        });
-      });
-      (stockRes.data ?? []).forEach((p) => {
-        items.push({
-          id: `stock-${p.id}`,
-          type: "stock",
-          message: `Low stock: ${p.name} (${p.stock} left)`,
-          href: "/admin/inventory",
-        });
-      });
-      setNotifications(items);
-    })();
-  }, []);
+  const pendingOrders = orders.filter((o) => o.status === "pending");
+  const lowStock = products.filter((p) => p.stock <= LOW_STOCK_THRESHOLD);
+
+  const notifications: Notification[] = [
+    ...pendingOrders.slice(0, 5).map((o) => ({
+      id: `order-${o.id}`,
+      type: "order" as const,
+      message: `New pending order #${o.id.slice(0, 8)}`,
+      href: "/admin/orders" as const,
+    })),
+    ...lowStock.slice(0, 5).map((p) => ({
+      id: `stock-${p.id}`,
+      type: "stock" as const,
+      message: `Low stock: ${p.name} (${p.stock} left)`,
+      href: "/admin/inventory" as const,
+    })),
+  ];
 
   const count = notifications.length;
 

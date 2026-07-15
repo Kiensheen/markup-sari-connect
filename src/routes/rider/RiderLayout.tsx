@@ -1,6 +1,5 @@
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { LayoutDashboard, User, Wallet } from "lucide-react";
-import { RoleSwitcher } from "@/components/RoleSwitcher";
 
 const tabs = [
   { to: "/rider/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -19,7 +18,10 @@ export function RiderLayout() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">M</div>
             <span className="font-bold">MarketUp Rider</span>
           </div>
-          <RoleSwitcher />
+          <div className="flex items-center gap-2">
+            <Link to="/" className="text-xs text-muted-foreground hover:text-foreground">Consumer</Link>
+            <Link to="/admin/dashboard" className="text-xs text-muted-foreground hover:text-foreground">Admin</Link>
+          </div>
         </div>
       </header>
 

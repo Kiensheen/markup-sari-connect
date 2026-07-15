@@ -9,6 +9,15 @@ export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
 });
 
+type DeliveryTime = "asap" | "morning" | "afternoon" | "evening";
+
+const DELIVERY_LABELS: Record<DeliveryTime, string> = {
+  asap: "ASAP",
+  morning: "Morning (8AM–12PM)",
+  afternoon: "Afternoon (12PM–5PM)",
+  evening: "Evening (5PM–9PM)",
+};
+
 function CheckoutPage() {
   const { cartItems, cartTotal, createOrder, currentUser } = useMock();
   const navigate = useNavigate();
@@ -16,6 +25,7 @@ function CheckoutPage() {
   const [phone, setPhone] = useState(currentUser.phone);
   const [notes, setNotes] = useState("");
   const [payment, setPayment] = useState<"cod" | "gcash">("cod");
+  const [deliveryTime, setDeliveryTime] = useState<DeliveryTime>("asap");
   const [busy, setBusy] = useState(false);
 
   if (cartItems.length === 0) return <p className="py-10 text-center text-sm text-muted-foreground">Your cart is empty.</p>;
@@ -24,7 +34,10 @@ function CheckoutPage() {
     e.preventDefault();
     setBusy(true);
     try {
-      createOrder(address, phone, payment, notes);
+      const fullNotes = [notes, deliveryTime !== "asap" ? `Preferred delivery: ${DELIVERY_LABELS[deliveryTime]}` : ""]
+        .filter(Boolean)
+        .join(" | ");
+      createOrder(address, phone, payment, fullNotes);
       toast.success("Order placed successfully!");
       navigate({ to: "/orders" });
     } catch (err: unknown) {
@@ -81,16 +94,36 @@ function CheckoutPage() {
         />
       </section>
 
+      <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+        <h2 className="font-semibold">Delivery time</h2>
+        <div className="grid grid-cols-2 gap-2">
+          {(["asap", "morning", "afternoon", "evening"] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setDeliveryTime(t)}
+              className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition ${
+                deliveryTime === t
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-foreground hover:border-primary/40"
+              }`}
+            >
+              {DELIVERY_LABELS[t]}
+            </button>
+          ))}
+        </div>
+      </section>
+
       <section className="space-y-2 rounded-xl border border-border bg-card p-4">
         <h2 className="font-semibold">Payment method</h2>
-        <label className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 ${payment === "cod" ? "border-primary bg-primary-soft" : "border-border"}`}>
+        <label className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 ${payment === "cod" ? "border-primary bg-primary/10" : "border-border"}`}>
           <input type="radio" name="pm" checked={payment === "cod"} onChange={() => setPayment("cod")} className="accent-primary" />
           <div>
             <p className="text-sm font-semibold">Cash on Delivery (COD)</p>
             <p className="text-xs text-muted-foreground">Pay with cash when the rider arrives</p>
           </div>
         </label>
-        <label className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 ${payment === "gcash" ? "border-primary bg-primary-soft" : "border-border"}`}>
+        <label className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 ${payment === "gcash" ? "border-primary bg-primary/10" : "border-border"}`}>
           <input type="radio" name="pm" checked={payment === "gcash"} onChange={() => setPayment("gcash")} className="accent-primary" />
           <div>
             <p className="text-sm font-semibold">GCash</p>

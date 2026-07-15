@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
 import { useMock } from "@/contexts/MockContext";
 import { OrderProgressBar } from "@/components/OrderProgressBar";
 import { STATUS_COLORS, formatDate, peso } from "@/lib/mockData";
@@ -18,7 +18,8 @@ const paymentLabel = (method: string) => {
 };
 
 function OrdersPage() {
-  const { orders, cancelOrder, currentUser } = useMock();
+  const { orders, cancelOrder, currentUser, products, addToCart } = useMock();
+  const navigate = useNavigate();
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const userOrders = orders.filter((o) => o.consumer_id === currentUser.id);
@@ -27,6 +28,28 @@ function OrdersPage() {
     if (!window.confirm("Cancel this order?")) return;
     cancelOrder(orderId);
     toast.success("Order cancelled");
+  };
+
+  const handleReorder = (orderId: string) => {
+    const order = userOrders.find((o) => o.id === orderId);
+    if (!order) return;
+    order.items.forEach((item) => {
+      const product = products.find((p) => p.id === item.product_id);
+      if (product) addToCart(product);
+    });
+    toast.success("Items added to cart!");
+    navigate({ to: "/cart" });
+  };
+
+  const handleReorderByName = (orderId: string) => {
+    const order = userOrders.find((o) => o.id === orderId);
+    if (!order) return;
+    order.items.forEach((item) => {
+      const product = products.find((p) => p.name === item.name);
+      if (product) addToCart(product);
+    });
+    toast.success("Items added to cart!");
+    navigate({ to: "/cart" });
   };
 
   if (userOrders.length === 0) {
@@ -92,8 +115,19 @@ function OrdersPage() {
                     {o.notes && (
                       <p className="text-xs text-muted-foreground">Note: {o.notes}</p>
                     )}
-                    {o.rider_id === null && ["pending"].includes(o.status) && (
-                      <div className="mt-3">
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {o.status === "delivered" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          type="button"
+                          onClick={() => handleReorderByName(o.id)}
+                          className="gap-1.5"
+                        >
+                          <RotateCcw className="h-3.5 w-3.5" /> Reorder All
+                        </Button>
+                      )}
+                      {o.rider_id === null && ["pending"].includes(o.status) && (
                         <Button
                           variant="destructive"
                           size="sm"
@@ -102,8 +136,8 @@ function OrdersPage() {
                         >
                           Cancel Order
                         </Button>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
               )}

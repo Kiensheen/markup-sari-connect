@@ -11,9 +11,7 @@ import { type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { MockProvider } from "@/contexts/MockContext";
-import { CartProvider } from "@/lib/cart-context";
-import { AppHeader } from "@/components/AppHeader";
-import { BottomNav } from "@/components/BottomNav";
+import { ConsumerLayout } from "@/components/ConsumerLayout";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -85,20 +83,14 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <MockProvider>
-        <CartProvider>
-          {isBareApp ? (
+        {isBareApp ? (
+          <Outlet />
+        ) : (
+          <ConsumerLayout>
             <Outlet />
-          ) : (
-            <div className="min-h-screen bg-background pb-20 md:pb-0">
-              <AppHeader />
-              <BottomNav />
-              <main className="mx-auto max-w-3xl px-4 py-6">
-                <Outlet />
-              </main>
-            </div>
-          )}
-          <Toaster />
-        </CartProvider>
+          </ConsumerLayout>
+        )}
+        <Toaster />
       </MockProvider>
     </QueryClientProvider>
   );

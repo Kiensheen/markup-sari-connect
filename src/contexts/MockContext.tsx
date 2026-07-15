@@ -1,10 +1,9 @@
-import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useMemo, useEffect, type ReactNode } from "react";
 import { mockProducts, mockUsers, mockOrders, type Product, type Order, type User, type AdminStats, type RiderStats, type OrderItem, generateId, DELIVERY_FEE } from "@/lib/mockData";
 
 interface MockContextValue {
   currentUser: User;
   role: 'consumer' | 'rider' | 'admin';
-  switchRole: (role: 'consumer' | 'rider' | 'admin') => void;
 
   products: Product[];
   orders: Order[];
@@ -43,14 +42,17 @@ interface MockContextValue {
 
 const Ctx = createContext<MockContextValue>(null!);
 
-const ROLE_USER_MAP: Record<string, string> = {
-  consumer: 'u1',
-  rider: 'u2',
-  admin: 'u3',
-};
-
 function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
+}
+
+function detectRole(): 'consumer' | 'rider' | 'admin' {
+  if (typeof window !== 'undefined') {
+    const path = window.location.pathname;
+    if (path.startsWith('/rider')) return 'rider';
+    if (path.startsWith('/admin')) return 'admin';
+  }
+  return 'consumer';
 }
 
 function getInitialCart(): { product: Product; quantity: number }[] {
@@ -62,33 +64,27 @@ function getInitialCart(): { product: Product; quantity: number }[] {
 }
 
 export function MockProvider({ children }: { children: ReactNode }) {
-  const [role, setRole] = useState<'consumer' | 'rider' | 'admin'>('consumer');
-  const [currentUser, setCurrentUser] = useState<User>(() => deepClone(mockUsers[0]));
+  const initRole = detectRole();
+  const initUserId = initRole === 'rider' ? 'u2' : initRole === 'admin' ? 'u3' : 'u1';
+  const [role, setRole] = useState<'consumer' | 'rider' | 'admin'>(initRole);
+  const [currentUser, setCurrentUser] = useState<User>(() => deepClone(mockUsers.find(u => u.id === initUserId) ?? mockUsers[0]));
   const [orders, setOrders] = useState<Order[]>(() => deepClone(mockOrders));
   const [products, setProducts] = useState<Product[]>(() => deepClone(mockProducts));
   const [users, setUsers] = useState<User[]>(() => deepClone(mockUsers));
   const [cartItems, setCartItems] = useState<{ product: Product; quantity: number }[]>(getInitialCart);
+
+  useEffect(() => {
+    const newRole = detectRole();
+    const newUserId = newRole === 'rider' ? 'u2' : newRole === 'admin' ? 'u3' : 'u1';
+    setRole(newRole);
+    setCurrentUser(deepClone(mockUsers.find(u => u.id === newUserId) ?? mockUsers[0]));
+  }, []);
 
   const persistCart = useCallback((items: { product: Product; quantity: number }[]) => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('marketup_cart2', JSON.stringify(items));
     }
   }, []);
-
-  const switchRole = useCallback((newRole: 'consumer' | 'rider' | 'admin') => {
-    setRole(newRole);
-    const userId = ROLE_USER_MAP[newRole];
-    const user = users.find((u) => u.id === userId) ?? users[0];
-    setCurrentUser(deepClone(user));
-    if (typeof window !== 'undefined') {
-      const paths: Record<string, string> = {
-        consumer: '/',
-        rider: '/rider/dashboard',
-        admin: '/admin/dashboard',
-      };
-      window.location.href = paths[newRole];
-    }
-  }, [users]);
 
   const addToCart = useCallback((product: Product) => {
     setCartItems((prev) => {
@@ -265,7 +261,6 @@ export function MockProvider({ children }: { children: ReactNode }) {
   const value: MockContextValue = {
     currentUser,
     role,
-    switchRole,
     products,
     orders,
     users,
