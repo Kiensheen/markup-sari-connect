@@ -78,7 +78,8 @@ function RootComponent() {
   const { location } = useRouterState();
   const isRiderApp = location.pathname.startsWith("/rider");
   const isAdminApp = location.pathname.startsWith("/admin");
-  const isBareApp = isRiderApp || isAdminApp;
+  const isLanding = location.pathname.startsWith("/landing");
+  const isBareApp = isRiderApp || isAdminApp || isLanding;
 
   return (
     <QueryClientProvider client={queryClient}>

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PointsRouteImport } from './routes/points'
 import { Route as OrdersRouteImport } from './routes/orders'
+import { Route as LandingRouteImport } from './routes/landing'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as RiderRouteRouteImport } from './routes/rider/route'
@@ -44,6 +45,11 @@ const PointsRoute = PointsRouteImport.update({
 const OrdersRoute = OrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LandingRoute = LandingRouteImport.update({
+  id: '/landing',
+  path: '/landing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutRoute = CheckoutRouteImport.update({
@@ -143,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/rider': typeof RiderRouteRouteWithChildren
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/landing': typeof LandingRoute
   '/orders': typeof OrdersRoute
   '/points': typeof PointsRoute
   '/profile': typeof ProfileRoute
@@ -164,6 +171,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/landing': typeof LandingRoute
   '/orders': typeof OrdersRoute
   '/points': typeof PointsRoute
   '/profile': typeof ProfileRoute
@@ -188,6 +196,7 @@ export interface FileRoutesById {
   '/rider': typeof RiderRouteRouteWithChildren
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/landing': typeof LandingRoute
   '/orders': typeof OrdersRoute
   '/points': typeof PointsRoute
   '/profile': typeof ProfileRoute
@@ -213,6 +222,7 @@ export interface FileRouteTypes {
     | '/rider'
     | '/cart'
     | '/checkout'
+    | '/landing'
     | '/orders'
     | '/points'
     | '/profile'
@@ -234,6 +244,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cart'
     | '/checkout'
+    | '/landing'
     | '/orders'
     | '/points'
     | '/profile'
@@ -257,6 +268,7 @@ export interface FileRouteTypes {
     | '/rider'
     | '/cart'
     | '/checkout'
+    | '/landing'
     | '/orders'
     | '/points'
     | '/profile'
@@ -281,6 +293,7 @@ export interface RootRouteChildren {
   RiderRouteRoute: typeof RiderRouteRouteWithChildren
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
+  LandingRoute: typeof LandingRoute
   OrdersRoute: typeof OrdersRoute
   PointsRoute: typeof PointsRoute
   ProfileRoute: typeof ProfileRoute
@@ -307,6 +320,13 @@ declare module '@tanstack/react-router' {
       path: '/orders'
       fullPath: '/orders'
       preLoaderRoute: typeof OrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/landing': {
+      id: '/landing'
+      path: '/landing'
+      fullPath: '/landing'
+      preLoaderRoute: typeof LandingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkout': {
@@ -490,6 +510,7 @@ const rootRouteChildren: RootRouteChildren = {
   RiderRouteRoute: RiderRouteRouteWithChildren,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
+  LandingRoute: LandingRoute,
   OrdersRoute: OrdersRoute,
   PointsRoute: PointsRoute,
   ProfileRoute: ProfileRoute,
