@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, useMemo, useEffect, type ReactNode } from "react";
+import { useLocation } from "@tanstack/react-router";
 import { mockProducts, mockUsers, mockOrders, type Product, type Order, type User, type AdminStats, type RiderStats, type OrderItem, generateId, DELIVERY_FEE } from "@/lib/mockData";
 
 interface MockContextValue {
@@ -46,44 +47,106 @@ function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
 }
 
-function detectRole(): 'consumer' | 'rider' | 'admin' {
-  if (typeof window !== 'undefined') {
-    const path = window.location.pathname;
-    if (path.startsWith('/rider')) return 'rider';
-    if (path.startsWith('/admin')) return 'admin';
-  }
-  return 'consumer';
+// LocalStorage keys
+const STORAGE_KEYS = {
+  cart: 'marketup_cart2',
+  orders: 'marketup_orders',
+  products: 'marketup_products',
+  users: 'marketup_users',
+} as const;
+
+// Helper to load from localStorage
+function loadFromStorage<T>(key: string, fallback: T): T {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return fallback;
+}
+
+// Helper to save to localStorage
+function saveToStorage<T>(key: string, data: T): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch {}
 }
 
 function getInitialCart(): { product: Product; quantity: number }[] {
-  try {
-    const raw = typeof window !== 'undefined' ? localStorage.getItem('marketup_cart2') : null;
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return [];
+  return loadFromStorage(STORAGE_KEYS.cart, []);
+}
+
+function getInitialOrders(): Order[] {
+  // If no saved orders, use mockOrders with current dates
+  const saved = loadFromStorage<Order[] | null>(STORAGE_KEYS.orders, null);
+  return saved ?? deepClone(mockOrders);
+}
+
+function getInitialProducts(): Product[] {
+  // If no saved products, use mockProducts
+  const saved = loadFromStorage<Product[] | null>(STORAGE_KEYS.products, null);
+  return saved ?? deepClone(mockProducts);
+}
+
+function getInitialUsers(): User[] {
+  // If no saved users, use mockUsers
+  const saved = loadFromStorage<User[] | null>(STORAGE_KEYS.users, null);
+  return saved ?? deepClone(mockUsers);
 }
 
 export function MockProvider({ children }: { children: ReactNode }) {
-  const initRole = detectRole();
-  const initUserId = initRole === 'rider' ? 'u2' : initRole === 'admin' ? 'u3' : 'u1';
-  const [role, setRole] = useState<'consumer' | 'rider' | 'admin'>(initRole);
-  const [currentUser, setCurrentUser] = useState<User>(() => deepClone(mockUsers.find(u => u.id === initUserId) ?? mockUsers[0]));
-  const [orders, setOrders] = useState<Order[]>(() => deepClone(mockOrders));
-  const [products, setProducts] = useState<Product[]>(() => deepClone(mockProducts));
-  const [users, setUsers] = useState<User[]>(() => deepClone(mockUsers));
+  // Initialize with consumer role (default), will be updated by useEffect on mount
+  const [role, setRole] = useState<'consumer' | 'rider' | 'admin'>('consumer');
+  const [currentUser, setCurrentUser] = useState<User>(() => getInitialUsers()[0]);
+  const [orders, setOrders] = useState<Order[]>(getInitialOrders);
+  const [products, setProducts] = useState<Product[]>(getInitialProducts);
+  const [users, setUsers] = useState<User[]>(getInitialUsers);
   const [cartItems, setCartItems] = useState<{ product: Product; quantity: number }[]>(getInitialCart);
 
+  // Watch for URL changes and switch user based on route
+  const location = useLocation();
+
   useEffect(() => {
-    const newRole = detectRole();
-    const newUserId = newRole === 'rider' ? 'u2' : newRole === 'admin' ? 'u3' : 'u1';
+    const path = location.pathname;
+    let newRole: 'consumer' | 'rider' | 'admin' = 'consumer';
+    let newUserId = 'u1';
+
+    if (path.startsWith('/rider')) {
+      newRole = 'rider';
+      newUserId = 'u2';
+    } else if (path.startsWith('/admin')) {
+      newRole = 'admin';
+      newUserId = 'u3';
+    }
+
     setRole(newRole);
-    setCurrentUser(deepClone(mockUsers.find(u => u.id === newUserId) ?? mockUsers[0]));
-  }, []);
+    // Use persisted users when switching roles
+    setCurrentUser(deepClone(users.find(u => u.id === newUserId) ?? mockUsers[0]));
+  }, [location.pathname, users]);
+
+  // Persist orders to localStorage
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.orders, orders);
+  }, [orders]);
+
+  // Persist products to localStorage
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.products, products);
+  }, [products]);
+
+  // Persist users (including points) to localStorage
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.users, users);
+  }, [users]);
+
+  // Persist cart to localStorage
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.cart, cartItems);
+  }, [cartItems]);
 
   const persistCart = useCallback((items: { product: Product; quantity: number }[]) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('marketup_cart2', JSON.stringify(items));
-    }
+    saveToStorage(STORAGE_KEYS.cart, items);
   }, []);
 
   const addToCart = useCallback((product: Product) => {

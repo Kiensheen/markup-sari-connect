@@ -1,28 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import {
-  Award,
-  Gift,
-  User as UserIcon,
-  Package,
-  MapPin,
-  CreditCard,
-  Bell,
-  HelpCircle,
-  ChevronRight,
-  LogOut,
-  Edit3,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Award, Gift, Package, CreditCard, Bell, HelpCircle, ChevronRight, X } from "lucide-react";
 import { useMock } from "@/contexts/MockContext";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import type { SavedAddress } from "@/lib/mockData";
+import { ProfileHeader } from "@/components/profile/ProfileHeader";
+import { ProfileEditForm, type ProfileEditValues } from "@/components/profile/ProfileEditForm";
+import { AddressesCard } from "@/components/profile/AddressesCard";
+import { AddAddressModal, type NewAddressInput } from "@/components/profile/AddAddressModal";
 
 export const Route = createFileRoute("/profile")({
   component: ProfilePage,
@@ -33,41 +18,123 @@ const REDEEM_NAME = "₱50 off coupon";
 const REDEEM_VALUE = 50;
 
 const menuItems = [
-  { icon: Package, label: "My Orders", href: "/orders", color: "text-blue-600", bg: "bg-blue-50" },
-  { icon: MapPin, label: "Saved Addresses", href: "#", color: "text-green-600", bg: "bg-green-50" },
-  { icon: CreditCard, label: "Payment Methods", href: "#", color: "text-purple-600", bg: "bg-purple-50" },
-  { icon: Bell, label: "Notifications", href: "#", color: "text-amber-600", bg: "bg-amber-50" },
-  { icon: HelpCircle, label: "Help & Support", href: "#", color: "text-gray-600", bg: "bg-gray-100" },
+  {
+    icon: Package,
+    label: "My Orders",
+    to: "/orders" as const,
+    color: "text-blue-600",
+    bg: "bg-blue-50",
+  },
+  {
+    icon: CreditCard,
+    label: "Payment Methods",
+    color: "text-purple-600",
+    bg: "bg-purple-50",
+  },
+  { icon: Bell, label: "Notifications", color: "text-amber-600", bg: "bg-amber-50" },
+  {
+    icon: HelpCircle,
+    label: "Help & Support",
+    color: "text-gray-600",
+    bg: "bg-gray-100",
+  },
 ];
 
 function ProfilePage() {
   const { currentUser, updateUserProfile, adjustPoints } = useMock();
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const [addresses, setAddresses] = useState<SavedAddress[]>(currentUser.addresses ?? []);
+  const [addOpen, setAddOpen] = useState(false);
+
   const [redeemOpen, setRedeemOpen] = useState(false);
   const [redeeming, setRedeeming] = useState(false);
 
-  const [editMode, setEditMode] = useState(false);
-  const [saveBusy, setSaveBusy] = useState(false);
-
-  const [editName, setEditName] = useState(currentUser.name);
-  const [editPhone, setEditPhone] = useState(currentUser.phone);
-  const [editAddress, setEditAddress] = useState(currentUser.address);
+  useEffect(() => {
+    setAddresses(currentUser.addresses ?? []);
+  }, [currentUser.id, currentUser.addresses]);
 
   const txns = [
-    { id: 't1', source: 'Order #o1 completed', points_earned: 2, points_redeemed: 0, created_at: '2026-07-01T10:00:00Z' },
-    { id: 't2', source: 'Order #o3 completed', points_earned: 2, points_redeemed: 0, created_at: '2026-07-03T09:15:00Z' },
-    { id: 't3', source: 'Signup bonus', points_earned: 50, points_redeemed: 0, created_at: '2026-01-15T08:00:00Z' },
+    {
+      id: "t1",
+      source: "Order #o1 completed",
+      points_earned: 2,
+      points_redeemed: 0,
+      created_at: "2026-07-01T10:00:00Z",
+    },
+    {
+      id: "t2",
+      source: "Order #o3 completed",
+      points_earned: 2,
+      points_redeemed: 0,
+      created_at: "2026-07-03T09:15:00Z",
+    },
+    {
+      id: "t3",
+      source: "Signup bonus",
+      points_earned: 50,
+      points_redeemed: 0,
+      created_at: "2026-01-15T08:00:00Z",
+    },
   ];
 
-  const saveProfile = () => {
-    if (!editName.trim() || !editPhone.trim()) {
-      toast.error("Name and phone are required");
+  const persistAddresses = (next: SavedAddress[]) => {
+    setAddresses(next);
+    const def = next.find((a) => a.is_default);
+    updateUserProfile(currentUser.id, { addresses: next, address: def ? def.address : "" });
+  };
+
+  const handlePhotoSelected = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose an image file");
       return;
     }
-    setSaveBusy(true);
-    updateUserProfile(currentUser.id, { name: editName.trim(), phone: editPhone.trim(), address: editAddress.trim() });
-    setSaveBusy(false);
+    const reader = new FileReader();
+    reader.onload = () => {
+      updateUserProfile(currentUser.id, { avatar_url: reader.result as string });
+      toast.success("Profile photo updated");
+    };
+    reader.onerror = () => toast.error("Could not read image");
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePhoto = () => {
+    updateUserProfile(currentUser.id, { avatar_url: null });
+    toast.success("Profile photo removed");
+  };
+
+  const handleSaveProfile = (data: ProfileEditValues) => {
+    setSaving(true);
+    updateUserProfile(currentUser.id, data);
+    setSaving(false);
+    setIsEditing(false);
     toast.success("Profile updated");
-    setEditMode(false);
+  };
+
+  const handleAddAddress = (data: NewAddressInput) => {
+    const id = `a${Date.now().toString(36)}`;
+    const next =
+      addresses.length === 0
+        ? [{ ...data, id, is_default: true }]
+        : [...addresses, { ...data, id }];
+    persistAddresses(next);
+    setAddOpen(false);
+    toast.success("Address added");
+  };
+
+  const handleSetDefault = (id: string) => {
+    persistAddresses(addresses.map((a) => ({ ...a, is_default: a.id === id })));
+    toast.success("Default address updated — used at checkout");
+  };
+
+  const handleDeleteAddress = (id: string) => {
+    let next = addresses.filter((a) => a.id !== id);
+    if (next.length > 0 && !next.some((a) => a.is_default)) {
+      next = next.map((a, i) => (i === 0 ? { ...a, is_default: true } : a));
+    }
+    persistAddresses(next);
+    toast.success("Address deleted");
   };
 
   const handleRedeem = () => {
@@ -84,36 +151,35 @@ function ProfilePage() {
 
   return (
     <div className="space-y-5">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-700 to-blue-600 p-6 text-white shadow-md">
-        <div className="absolute right-0 top-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-white/10" />
-        <div className="absolute bottom-0 left-1/2 h-24 w-24 -translate-x-1/2 translate-y-8 rounded-full bg-white/5" />
-        <div className="relative flex items-center gap-4">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/20 text-3xl font-bold text-white ring-2 ring-white/30 backdrop-blur-sm">
-            {currentUser.name.charAt(0).toUpperCase()}
-          </div>
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate text-xl font-bold">{currentUser.name}</h1>
-            <p className="truncate text-sm text-blue-100">{currentUser.email}</p>
-            {currentUser.phone && (
-              <p className="flex items-center gap-1 text-xs text-blue-100 mt-0.5">
-                📞 {currentUser.phone}
-              </p>
-            )}
-            <button
-              type="button"
-              onClick={() => {
-                setEditName(currentUser.name);
-                setEditPhone(currentUser.phone);
-                setEditAddress(currentUser.address);
-                setEditMode(!editMode);
-              }}
-              className="mt-2 inline-flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white hover:bg-white/30 transition-colors"
-            >
-              <Edit3 className="h-3 w-3" /> Edit Profile
-            </button>
-          </div>
-        </div>
-      </div>
+      <ProfileHeader
+        user={currentUser}
+        isEditing={isEditing}
+        onEditToggle={() => setIsEditing((v) => !v)}
+        onPhotoSelected={handlePhotoSelected}
+        onRemovePhoto={handleRemovePhoto}
+      />
+
+      {isEditing && (
+        <ProfileEditForm
+          saving={saving}
+          initial={{
+            name: currentUser.name,
+            email: currentUser.email,
+            phone: currentUser.phone,
+            store_name: currentUser.store_name ?? "",
+            store_hours: currentUser.store_hours ?? "",
+          }}
+          onSave={handleSaveProfile}
+          onCancel={() => setIsEditing(false)}
+        />
+      )}
+
+      <AddressesCard
+        addresses={addresses}
+        onAdd={() => setAddOpen(true)}
+        onSetDefault={handleSetDefault}
+        onDelete={handleDeleteAddress}
+      />
 
       <div className="rounded-2xl bg-gradient-to-br from-green-600 to-green-500 p-5 text-white shadow-md">
         <div className="flex items-center justify-between">
@@ -128,7 +194,7 @@ function ProfilePage() {
             type="button"
             onClick={() => setRedeemOpen(true)}
             disabled={currentUser.points < REDEEM_COST}
-            className="rounded-xl bg-white/20 px-5 py-3 text-sm font-semibold backdrop-blur-sm hover:bg-white/30 transition-all disabled:opacity-50 active:scale-95"
+            className="rounded-xl bg-white/20 px-5 py-3 text-sm font-semibold backdrop-blur-sm transition-all hover:bg-white/30 disabled:opacity-50 active:scale-95"
           >
             <Gift className="mr-1.5 inline h-4 w-4" />
             Redeem
@@ -136,73 +202,38 @@ function ProfilePage() {
         </div>
       </div>
 
-      {editMode && (
-        <section className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
-          <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700">
-            <UserIcon className="h-4 w-4 text-blue-600" /> Edit details
-          </h2>
-          <div className="space-y-2 text-sm">
-            <input
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              placeholder="Full name"
-              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
-            />
-            <input
-              type="tel"
-              value={editPhone}
-              onChange={(e) => setEditPhone(e.target.value)}
-              placeholder="Phone number"
-              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
-            />
-            <textarea
-              value={editAddress}
-              onChange={(e) => setEditAddress(e.target.value)}
-              placeholder="Address"
-              rows={2}
-              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
-            />
-            <div className="flex gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => setEditMode(false)}
-                className="flex-1 rounded-lg border border-gray-200 px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={saveBusy}
-                onClick={saveProfile}
-                className="flex-1 rounded-lg bg-blue-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-60"
-              >
-                {saveBusy ? "Saving..." : "Save"}
-              </button>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {!editMode && (
-        <section className="rounded-xl bg-white shadow-sm ring-1 ring-gray-100 divide-y divide-gray-100">
-          {menuItems.map((item, i) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={i}
-                to={item.href as any}
-                className="flex items-center gap-3 p-4 text-sm hover:bg-gray-50 transition-colors"
-              >
-                <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${item.bg}`}>
-                  <Icon className={`h-4 w-4 ${item.color}`} />
-                </div>
-                <span className="flex-1 font-medium text-gray-700">{item.label}</span>
-                <ChevronRight className="h-4 w-4 text-gray-300" />
-              </Link>
-            );
-          })}
-        </section>
-      )}
+      <section className="divide-y divide-gray-100 rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
+        {menuItems.map((item, i) => {
+          const Icon = item.icon;
+          const inner = (
+            <>
+              <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${item.bg}`}>
+                <Icon className={`h-4 w-4 ${item.color}`} />
+              </div>
+              <span className="flex-1 font-medium text-gray-700">{item.label}</span>
+              <ChevronRight className="h-4 w-4 text-gray-300" />
+            </>
+          );
+          return item.to ? (
+            <Link
+              key={i}
+              to={item.to}
+              className="flex items-center gap-3 p-4 text-sm transition hover:bg-gray-50"
+            >
+              {inner}
+            </Link>
+          ) : (
+            <button
+              key={i}
+              type="button"
+              onClick={() => toast.info(`${item.label} coming soon`)}
+              className="flex w-full items-center gap-3 p-4 text-left text-sm transition hover:bg-gray-50"
+            >
+              {inner}
+            </button>
+          );
+        })}
+      </section>
 
       <section>
         <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700">
@@ -210,10 +241,15 @@ function ProfilePage() {
         </h2>
         <div className="space-y-1.5">
           {txns.map((t) => (
-            <div key={t.id} className="flex items-center justify-between rounded-lg bg-white px-4 py-3 shadow-sm ring-1 ring-gray-100">
+            <div
+              key={t.id}
+              className="flex items-center justify-between rounded-lg bg-white px-4 py-3 shadow-sm ring-1 ring-gray-100"
+            >
               <div>
                 <p className="text-sm font-medium text-gray-800">{t.source}</p>
-                <p className="text-xs text-gray-500">{new Date(t.created_at).toLocaleDateString()}</p>
+                <p className="text-xs text-gray-500">
+                  {new Date(t.created_at).toLocaleDateString()}
+                </p>
               </div>
               <span
                 className={`text-sm font-bold ${
@@ -227,46 +263,63 @@ function ProfilePage() {
         </div>
       </section>
 
-      <Dialog open={redeemOpen} onOpenChange={setRedeemOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-gray-800">Redeem points</DialogTitle>
-            <DialogDescription>
-              Exchange your points for discounts on future orders.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4">
-            <div className="rounded-lg bg-green-100 p-2 text-green-600">
-              <Gift className="h-6 w-6" />
+      <AddAddressModal open={addOpen} onClose={() => setAddOpen(false)} onSave={handleAddAddress} />
+
+      {redeemOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 md:items-center md:p-4"
+          onClick={() => setRedeemOpen(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-t-2xl bg-white p-6 md:rounded-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-800">Redeem points</h2>
+              <button type="button" onClick={() => setRedeemOpen(false)} aria-label="Close">
+                <X className="h-5 w-5 text-gray-400 transition hover:text-gray-600" />
+              </button>
             </div>
-            <div className="flex-1">
-              <p className="font-semibold text-gray-800">{REDEEM_NAME}</p>
-              <p className="text-sm text-gray-500">{REDEEM_COST} points = ₱{REDEEM_VALUE} off</p>
+            <p className="text-sm text-gray-500">
+              Exchange your points for discounts on future orders.
+            </p>
+            <div className="mt-4 flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4">
+              <div className="rounded-lg bg-green-100 p-2 text-green-600">
+                <Gift className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-800">{REDEEM_NAME}</p>
+                <p className="text-sm text-gray-500">
+                  {REDEEM_COST} points = ₱{REDEEM_VALUE} off
+                </p>
+              </div>
+            </div>
+            <p className="mt-3 text-sm text-gray-500">
+              Your balance:{" "}
+              <span className="font-semibold text-gray-800">
+                {currentUser.points.toLocaleString()} pts
+              </span>
+            </p>
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setRedeemOpen(false)}
+                className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleRedeem}
+                disabled={redeeming || currentUser.points < REDEEM_COST}
+                className="flex-1 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50"
+              >
+                {redeeming ? "Redeeming..." : "Confirm redeem"}
+              </button>
             </div>
           </div>
-          <p className="text-sm text-gray-500">
-            Your balance:{" "}
-            <span className="font-semibold text-gray-800">{currentUser.points.toLocaleString()} pts</span>
-          </p>
-          <DialogFooter>
-            <button
-              type="button"
-              onClick={() => setRedeemOpen(false)}
-              className="rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleRedeem}
-              disabled={redeeming || currentUser.points < REDEEM_COST}
-              className="rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700 transition-colors disabled:opacity-50"
-            >
-              {redeeming ? "Redeeming..." : "Confirm redeem"}
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </div>
   );
 }

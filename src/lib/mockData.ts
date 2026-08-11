@@ -35,6 +35,14 @@ export interface Order {
   delivery_failure_at?: string | null;
 }
 
+export interface SavedAddress {
+  id: string;
+  label: string;
+  address: string;
+  phone?: string;
+  is_default?: boolean;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -42,6 +50,9 @@ export interface User {
   role: 'consumer' | 'rider' | 'admin';
   phone: string;
   address: string;
+  addresses?: SavedAddress[];
+  store_name?: string | null;
+  store_hours?: string | null;
   points: number;
   avatar_url: string | null;
   is_blocked?: boolean;
@@ -80,13 +91,17 @@ export const mockProducts: Product[] = [
 ];
 
 export const mockUsers: User[] = [
-  { id: 'u1', email: 'consumer@marketup.com', name: 'John Consumer', role: 'consumer', phone: '09123456789', address: '123 Main St, Manila', points: 450, avatar_url: null, created_at: '2026-01-15T08:00:00Z' },
+  { id: 'u1', email: 'consumer@marketup.com', name: 'John Consumer', role: 'consumer', phone: '09123456789', address: '123 Main St, Manila', store_name: "John's Sari-Sari Store", store_hours: '8:00 AM – 8:00 PM', addresses: [
+    { id: 'a1', label: 'Home / Store', address: '123 Main St, Manila', phone: '09123456789', is_default: true },
+    { id: 'a2', label: 'Warehouse', address: '456 Bodega Ave, Quezon City', phone: '09123456789' },
+  ], points: 450, avatar_url: null, created_at: '2026-01-15T08:00:00Z' },
   { id: 'u2', email: 'rider@marketup.com', name: 'Jane Rider', role: 'rider', phone: '09876543210', address: '456 Oak Ave, Quezon City', points: 0, avatar_url: null, created_at: '2026-02-20T10:00:00Z' },
   { id: 'u3', email: 'admin@marketup.com', name: 'Admin User', role: 'admin', phone: '09123456780', address: '789 Pine Rd, Makati', points: 0, avatar_url: null, created_at: '2026-01-01T00:00:00Z' },
-  { id: 'u4', email: 'guest@marketup.com', name: 'Guest User', role: 'consumer', phone: '', address: '', points: 0, avatar_url: null, created_at: '2026-07-01T00:00:00Z' },
+  { id: 'u4', email: 'guest@marketup.com', name: 'Guest User', role: 'consumer', phone: '', address: '', store_name: 'Guest Store', store_hours: null, addresses: [], points: 0, avatar_url: null, created_at: '2026-07-01T00:00:00Z' },
 ];
 
 export const mockOrders: Order[] = [
+  // Today's orders
   {
     id: 'o1',
     consumer_id: 'u1',
@@ -101,7 +116,7 @@ export const mockOrders: Order[] = [
       { product_id: 'p1', name: 'Coca-Cola 1.5L', quantity: 2, price: 75 },
       { product_id: 'p4', name: 'Lucky Me! Noodles', quantity: 3, price: 18 },
     ],
-    created_at: '2026-07-01T10:00:00Z',
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
   },
   {
     id: 'o2',
@@ -112,17 +127,18 @@ export const mockOrders: Order[] = [
     delivery_fee: 49,
     payment_method: 'gcash',
     delivery_address: '123 Main St, Manila',
-    notes: null,
+    notes: 'Please deliver before 5 PM',
     items: [
       { product_id: 'p5', name: '5kg Rice - Sinandomeng', quantity: 1, price: 280 },
     ],
-    created_at: '2026-07-02T14:30:00Z',
+    created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 min ago
   },
+  // Yesterday's orders
   {
     id: 'o3',
     consumer_id: 'u1',
     rider_id: 'u2',
-    status: 'out_for_delivery',
+    status: 'delivered',
     total: 214,
     delivery_fee: 49,
     payment_method: 'cod',
@@ -131,7 +147,125 @@ export const mockOrders: Order[] = [
     items: [
       { product_id: 'p3', name: 'San Miguel Beer', quantity: 3, price: 55 },
     ],
-    created_at: '2026-07-03T09:15:00Z',
+    created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // yesterday
+  },
+  {
+    id: 'o4',
+    consumer_id: 'u1',
+    rider_id: 'u2',
+    status: 'delivered',
+    total: 520,
+    delivery_fee: 49,
+    payment_method: 'gcash',
+    delivery_address: '456 Bodega Ave, Quezon City',
+    notes: null,
+    items: [
+      { product_id: 'p2', name: 'Pepsi 1.5L', quantity: 4, price: 70 },
+      { product_id: 'p6', name: '555 Sardines', quantity: 6, price: 25 },
+      { product_id: 'p10', name: 'Piattos Chips', quantity: 8, price: 32 },
+    ],
+    created_at: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(), // yesterday + 2hrs
+  },
+  // Earlier this week
+  {
+    id: 'o5',
+    consumer_id: 'u1',
+    rider_id: 'u2',
+    status: 'delivered',
+    total: 890,
+    delivery_fee: 49,
+    payment_method: 'cod',
+    delivery_address: '123 Main St, Manila',
+    notes: 'Extra care with the rice please',
+    items: [
+      { product_id: 'p5', name: '5kg Rice - Sinandomeng', quantity: 3, price: 280 },
+      { product_id: 'p8', name: 'Bear Brand Milk Powder', quantity: 1, price: 220 },
+    ],
+    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+  },
+  {
+    id: 'o6',
+    consumer_id: 'u1',
+    rider_id: 'u2',
+    status: 'delivered',
+    total: 375,
+    delivery_fee: 49,
+    payment_method: 'cod',
+    delivery_address: '123 Main St, Manila',
+    notes: null,
+    items: [
+      { product_id: 'p7', name: 'Argentina Corned Beef', quantity: 5, price: 45 },
+      { product_id: 'p9', name: 'Great Taste Coffee', quantity: 2, price: 110 },
+    ],
+    created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), // 4 days ago
+  },
+  {
+    id: 'o7',
+    consumer_id: 'u1',
+    rider_id: null,
+    status: 'cancelled',
+    total: 165,
+    delivery_fee: 49,
+    payment_method: 'gcash',
+    delivery_address: '123 Main St, Manila',
+    notes: null,
+    items: [
+      { product_id: 'p1', name: 'Coca-Cola 1.5L', quantity: 1, price: 75 },
+      { product_id: 'p4', name: 'Lucky Me! Noodles', quantity: 5, price: 18 },
+    ],
+    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+  },
+  // Active delivery (for rider)
+  {
+    id: 'o8',
+    consumer_id: 'u1',
+    rider_id: 'u2',
+    status: 'out_for_delivery',
+    total: 468,
+    delivery_fee: 49,
+    payment_method: 'cod',
+    delivery_address: '123 Main St, Manila',
+    notes: 'Call upon arrival',
+    items: [
+      { product_id: 'p5', name: '5kg Rice - Sinandomeng', quantity: 1, price: 280 },
+      { product_id: 'p3', name: 'San Miguel Beer', quantity: 4, price: 55 },
+    ],
+    created_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
+  },
+  // Another pending order
+  {
+    id: 'o9',
+    consumer_id: 'u1',
+    rider_id: null,
+    status: 'pending',
+    total: 196,
+    delivery_fee: 49,
+    payment_method: 'cod',
+    delivery_address: '456 Bodega Ave, Quezon City',
+    notes: null,
+    items: [
+      { product_id: 'p10', name: 'Piattos Chips', quantity: 3, price: 32 },
+      { product_id: 'p6', name: '555 Sardines', quantity: 4, price: 25 },
+    ],
+    created_at: new Date(Date.now() - 45 * 60 * 1000).toISOString(), // 45 min ago
+  },
+  // Confirmed order (rider accepted, waiting for pickup)
+  {
+    id: 'o10',
+    consumer_id: 'u1',
+    rider_id: 'u2',
+    status: 'confirmed',
+    total: 405,
+    delivery_fee: 49,
+    payment_method: 'gcash',
+    delivery_address: '123 Main St, Manila',
+    notes: 'Gate code: 1234',
+    items: [
+      { product_id: 'p8', name: 'Bear Brand Milk Powder', quantity: 1, price: 220 },
+      { product_id: 'p2', name: 'Pepsi 1.5L', quantity: 2, price: 70 },
+      { product_id: 'p4', name: 'Lucky Me! Noodles', quantity: 5, price: 18 },
+    ],
+    created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), // 3 hours ago
   },
 ];
 
