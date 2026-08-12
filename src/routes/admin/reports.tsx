@@ -87,35 +87,38 @@ function AdminReports() {
   }, [filteredOrders, users]);
 
   return (
-    <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-2xl font-bold">📈 Reports</h1>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-bold text-slate-800">Reports</h2>
+          <p className="text-sm text-slate-500">Revenue, orders and performance over a date range</p>
+        </div>
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-auto" />
-          <span>→</span>
-          <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-auto" />
+          <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-auto border-slate-300 focus:border-blue-500 focus:ring-blue-500/30" />
+          <span className="text-slate-400">→</span>
+          <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-auto border-slate-300 focus:border-blue-500 focus:ring-blue-500/30" />
           <Button
             onClick={() => downloadCSV(`report-${from}-${to}.csv`, filteredOrders.map((o) => ({
               id: o.id, total: o.total, delivery_fee: o.delivery_fee, payment: o.payment_method, status: o.status, created_at: o.created_at,
             })))}
-            className="gap-1"
+            className="gap-1 bg-gradient-to-r from-blue-600 to-blue-600 shadow-md shadow-blue-600/20 hover:from-blue-700 hover:to-blue-700"
           >
             <Download className="h-4 w-4" />CSV
           </Button>
         </div>
       </div>
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <Stat label="Total revenue" value={peso(revenueTotal)} />
-        <Stat label="COD revenue" value={peso(cod)} />
-        <Stat label="GCash/other revenue" value={peso(gcash)} />
-        <Stat label="Total orders" value={String(filteredOrders.length)} />
-        <Stat label="Delivered" value={String(filteredOrders.filter((o) => o.status === "delivered").length)} />
-        <Stat label="Cancelled" value={String(filteredOrders.filter((o) => o.status === "cancelled").length)} />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+        <Stat label="Total revenue" value={peso(revenueTotal)} tint="from-green-600 to-green-700" />
+        <Stat label="COD revenue" value={peso(cod)} tint="from-sky-500 to-blue-600" />
+        <Stat label="GCash/other" value={peso(gcash)} tint="from-blue-400 to-blue-500" />
+        <Stat label="Total orders" value={String(filteredOrders.length)} tint="from-slate-600 to-slate-700" />
+        <Stat label="Delivered" value={String(filteredOrders.filter((o) => o.status === "delivered").length)} tint="from-emerald-500 to-green-600" />
+        <Stat label="Cancelled" value={String(filteredOrders.filter((o) => o.status === "cancelled").length)} tint="from-red-500 to-rose-600" />
       </div>
 
       <div className="mb-6 grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+        <Card className="border-0 shadow-sm ring-1 ring-slate-200 lg:col-span-2">
           <CardHeader>
             <CardTitle className="text-base">Sales by day</CardTitle>
           </CardHeader>
@@ -136,7 +139,7 @@ function AdminReports() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-0 shadow-sm ring-1 ring-slate-200">
           <CardHeader>
             <CardTitle className="text-base">Payment split</CardTitle>
           </CardHeader>
@@ -160,7 +163,7 @@ function AdminReports() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
+        <Card className="border-0 shadow-sm ring-1 ring-slate-200">
           <CardHeader>
             <CardTitle className="text-base">Top selling products</CardTitle>
           </CardHeader>
@@ -177,7 +180,7 @@ function AdminReports() {
             )}
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-0 shadow-sm ring-1 ring-slate-200">
           <CardHeader>
             <CardTitle className="text-base">Rider performance</CardTitle>
           </CardHeader>
@@ -199,12 +202,13 @@ function AdminReports() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, tint }: { label: string; value: string; tint: string }) {
   return (
-    <Card>
-      <CardContent className="p-5">
-        <div className="text-xs uppercase text-muted-foreground">{label}</div>
-        <div className="mt-1 text-2xl font-bold">{value}</div>
+    <Card className="border-0 shadow-sm ring-1 ring-slate-200">
+      <CardContent className="p-4">
+        <div className={`mb-2 h-1 w-8 rounded-full bg-gradient-to-r ${tint}`} />
+        <div className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</div>
+        <div className="mt-1 text-xl font-bold text-slate-800">{value}</div>
       </CardContent>
     </Card>
   );

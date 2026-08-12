@@ -13,7 +13,7 @@ export function OrderProgressBar({ status }: { status: string }) {
             key={i}
             className={cn(
               "h-1.5 flex-1 rounded-full transition-colors",
-              i <= step ? "bg-primary" : "bg-muted",
+              i <= step ? "bg-emerald-600" : "bg-muted",
             )}
           />
         ))}
@@ -24,7 +24,7 @@ export function OrderProgressBar({ status }: { status: string }) {
             key={label}
             className={cn(
               "max-w-[4.5rem] text-center text-[10px] leading-tight",
-              i <= step ? "font-semibold text-primary" : "text-muted-foreground",
+              i <= step ? "font-semibold text-emerald-600" : "text-muted-foreground",
             )}
           >
             {label}

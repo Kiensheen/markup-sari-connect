@@ -18,7 +18,7 @@ interface MockContextValue {
   cartCount: number;
   clearCart: () => void;
 
-  createOrder: (address: string, phone: string, payment: string, notes: string) => Order;
+  createOrder: (address: string, phone: string, payment: string, notes?: string) => Order;
   cancelOrder: (orderId: string) => void;
   updateOrderStatus: (orderId: string, status: string) => void;
   assignRider: (orderId: string, riderId: string) => void;
@@ -190,7 +190,7 @@ export function MockProvider({ children }: { children: ReactNode }) {
   );
 
   const createOrder = useCallback(
-    (address: string, _phone: string, payment: string, notes: string) => {
+    (address: string, _phone: string, payment: string, notes?: string) => {
       const orderItems: OrderItem[] = cartItems.map((c) => ({
         product_id: c.product.id,
         name: c.product.name,

@@ -13,21 +13,26 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PointsRouteImport } from './routes/points'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as LandingRouteImport } from './routes/landing'
+import { Route as ConsumerRouteImport } from './routes/consumer'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as RiderRouteRouteImport } from './routes/rider/route'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RiderIndexRouteImport } from './routes/rider/index'
+import { Route as ConsumerIndexRouteImport } from './routes/consumer/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as RiderProfileRouteImport } from './routes/rider/profile'
+import { Route as RiderLoginRouteImport } from './routes/rider/login'
 import { Route as RiderEarningsRouteImport } from './routes/rider/earnings'
 import { Route as RiderDashboardRouteImport } from './routes/rider/dashboard'
+import { Route as ConsumerLoginRouteImport } from './routes/consumer/login'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminRidersRouteImport } from './routes/admin/riders'
 import { Route as AdminReportsRouteImport } from './routes/admin/reports'
 import { Route as AdminProductsRouteImport } from './routes/admin/products'
 import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
+import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminInventoryRouteImport } from './routes/admin/inventory'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminConsumersRouteImport } from './routes/admin/consumers'
@@ -50,6 +55,11 @@ const OrdersRoute = OrdersRouteImport.update({
 const LandingRoute = LandingRouteImport.update({
   id: '/landing',
   path: '/landing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConsumerRoute = ConsumerRouteImport.update({
+  id: '/consumer',
+  path: '/consumer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutRoute = CheckoutRouteImport.update({
@@ -82,6 +92,11 @@ const RiderIndexRoute = RiderIndexRouteImport.update({
   path: '/',
   getParentRoute: () => RiderRouteRoute,
 } as any)
+const ConsumerIndexRoute = ConsumerIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ConsumerRoute,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -90,6 +105,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const RiderProfileRoute = RiderProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => RiderRouteRoute,
+} as any)
+const RiderLoginRoute = RiderLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => RiderRouteRoute,
 } as any)
 const RiderEarningsRoute = RiderEarningsRouteImport.update({
@@ -101,6 +121,11 @@ const RiderDashboardRoute = RiderDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => RiderRouteRoute,
+} as any)
+const ConsumerLoginRoute = ConsumerLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => ConsumerRoute,
 } as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
@@ -127,6 +152,11 @@ const AdminOrdersRoute = AdminOrdersRouteImport.update({
   path: '/orders',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminInventoryRoute = AdminInventoryRouteImport.update({
   id: '/inventory',
   path: '/inventory',
@@ -149,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/rider': typeof RiderRouteRouteWithChildren
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/consumer': typeof ConsumerRouteWithChildren
   '/landing': typeof LandingRoute
   '/orders': typeof OrdersRoute
   '/points': typeof PointsRoute
@@ -156,15 +187,19 @@ export interface FileRoutesByFullPath {
   '/admin/consumers': typeof AdminConsumersRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/login': typeof AdminLoginRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/riders': typeof AdminRidersRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/consumer/login': typeof ConsumerLoginRoute
   '/rider/dashboard': typeof RiderDashboardRoute
   '/rider/earnings': typeof RiderEarningsRoute
+  '/rider/login': typeof RiderLoginRoute
   '/rider/profile': typeof RiderProfileRoute
   '/admin/': typeof AdminIndexRoute
+  '/consumer/': typeof ConsumerIndexRoute
   '/rider/': typeof RiderIndexRoute
 }
 export interface FileRoutesByTo {
@@ -178,15 +213,19 @@ export interface FileRoutesByTo {
   '/admin/consumers': typeof AdminConsumersRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/login': typeof AdminLoginRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/riders': typeof AdminRidersRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/consumer/login': typeof ConsumerLoginRoute
   '/rider/dashboard': typeof RiderDashboardRoute
   '/rider/earnings': typeof RiderEarningsRoute
+  '/rider/login': typeof RiderLoginRoute
   '/rider/profile': typeof RiderProfileRoute
   '/admin': typeof AdminIndexRoute
+  '/consumer': typeof ConsumerIndexRoute
   '/rider': typeof RiderIndexRoute
 }
 export interface FileRoutesById {
@@ -196,6 +235,7 @@ export interface FileRoutesById {
   '/rider': typeof RiderRouteRouteWithChildren
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/consumer': typeof ConsumerRouteWithChildren
   '/landing': typeof LandingRoute
   '/orders': typeof OrdersRoute
   '/points': typeof PointsRoute
@@ -203,15 +243,19 @@ export interface FileRoutesById {
   '/admin/consumers': typeof AdminConsumersRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/login': typeof AdminLoginRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/riders': typeof AdminRidersRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/consumer/login': typeof ConsumerLoginRoute
   '/rider/dashboard': typeof RiderDashboardRoute
   '/rider/earnings': typeof RiderEarningsRoute
+  '/rider/login': typeof RiderLoginRoute
   '/rider/profile': typeof RiderProfileRoute
   '/admin/': typeof AdminIndexRoute
+  '/consumer/': typeof ConsumerIndexRoute
   '/rider/': typeof RiderIndexRoute
 }
 export interface FileRouteTypes {
@@ -222,6 +266,7 @@ export interface FileRouteTypes {
     | '/rider'
     | '/cart'
     | '/checkout'
+    | '/consumer'
     | '/landing'
     | '/orders'
     | '/points'
@@ -229,15 +274,19 @@ export interface FileRouteTypes {
     | '/admin/consumers'
     | '/admin/dashboard'
     | '/admin/inventory'
+    | '/admin/login'
     | '/admin/orders'
     | '/admin/products'
     | '/admin/reports'
     | '/admin/riders'
     | '/admin/settings'
+    | '/consumer/login'
     | '/rider/dashboard'
     | '/rider/earnings'
+    | '/rider/login'
     | '/rider/profile'
     | '/admin/'
+    | '/consumer/'
     | '/rider/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -251,15 +300,19 @@ export interface FileRouteTypes {
     | '/admin/consumers'
     | '/admin/dashboard'
     | '/admin/inventory'
+    | '/admin/login'
     | '/admin/orders'
     | '/admin/products'
     | '/admin/reports'
     | '/admin/riders'
     | '/admin/settings'
+    | '/consumer/login'
     | '/rider/dashboard'
     | '/rider/earnings'
+    | '/rider/login'
     | '/rider/profile'
     | '/admin'
+    | '/consumer'
     | '/rider'
   id:
     | '__root__'
@@ -268,6 +321,7 @@ export interface FileRouteTypes {
     | '/rider'
     | '/cart'
     | '/checkout'
+    | '/consumer'
     | '/landing'
     | '/orders'
     | '/points'
@@ -275,15 +329,19 @@ export interface FileRouteTypes {
     | '/admin/consumers'
     | '/admin/dashboard'
     | '/admin/inventory'
+    | '/admin/login'
     | '/admin/orders'
     | '/admin/products'
     | '/admin/reports'
     | '/admin/riders'
     | '/admin/settings'
+    | '/consumer/login'
     | '/rider/dashboard'
     | '/rider/earnings'
+    | '/rider/login'
     | '/rider/profile'
     | '/admin/'
+    | '/consumer/'
     | '/rider/'
   fileRoutesById: FileRoutesById
 }
@@ -293,6 +351,7 @@ export interface RootRouteChildren {
   RiderRouteRoute: typeof RiderRouteRouteWithChildren
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
+  ConsumerRoute: typeof ConsumerRouteWithChildren
   LandingRoute: typeof LandingRoute
   OrdersRoute: typeof OrdersRoute
   PointsRoute: typeof PointsRoute
@@ -327,6 +386,13 @@ declare module '@tanstack/react-router' {
       path: '/landing'
       fullPath: '/landing'
       preLoaderRoute: typeof LandingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/consumer': {
+      id: '/consumer'
+      path: '/consumer'
+      fullPath: '/consumer'
+      preLoaderRoute: typeof ConsumerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkout': {
@@ -371,6 +437,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RiderIndexRouteImport
       parentRoute: typeof RiderRouteRoute
     }
+    '/consumer/': {
+      id: '/consumer/'
+      path: '/'
+      fullPath: '/consumer/'
+      preLoaderRoute: typeof ConsumerIndexRouteImport
+      parentRoute: typeof ConsumerRoute
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
@@ -383,6 +456,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/rider/profile'
       preLoaderRoute: typeof RiderProfileRouteImport
+      parentRoute: typeof RiderRouteRoute
+    }
+    '/rider/login': {
+      id: '/rider/login'
+      path: '/login'
+      fullPath: '/rider/login'
+      preLoaderRoute: typeof RiderLoginRouteImport
       parentRoute: typeof RiderRouteRoute
     }
     '/rider/earnings': {
@@ -398,6 +478,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/rider/dashboard'
       preLoaderRoute: typeof RiderDashboardRouteImport
       parentRoute: typeof RiderRouteRoute
+    }
+    '/consumer/login': {
+      id: '/consumer/login'
+      path: '/login'
+      fullPath: '/consumer/login'
+      preLoaderRoute: typeof ConsumerLoginRouteImport
+      parentRoute: typeof ConsumerRoute
     }
     '/admin/settings': {
       id: '/admin/settings'
@@ -434,6 +521,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOrdersRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/inventory': {
       id: '/admin/inventory'
       path: '/inventory'
@@ -462,6 +556,7 @@ interface AdminRouteRouteChildren {
   AdminConsumersRoute: typeof AdminConsumersRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminInventoryRoute: typeof AdminInventoryRoute
+  AdminLoginRoute: typeof AdminLoginRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
   AdminProductsRoute: typeof AdminProductsRoute
   AdminReportsRoute: typeof AdminReportsRoute
@@ -474,6 +569,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminConsumersRoute: AdminConsumersRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   AdminInventoryRoute: AdminInventoryRoute,
+  AdminLoginRoute: AdminLoginRoute,
   AdminOrdersRoute: AdminOrdersRoute,
   AdminProductsRoute: AdminProductsRoute,
   AdminReportsRoute: AdminReportsRoute,
@@ -489,6 +585,7 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
 interface RiderRouteRouteChildren {
   RiderDashboardRoute: typeof RiderDashboardRoute
   RiderEarningsRoute: typeof RiderEarningsRoute
+  RiderLoginRoute: typeof RiderLoginRoute
   RiderProfileRoute: typeof RiderProfileRoute
   RiderIndexRoute: typeof RiderIndexRoute
 }
@@ -496,6 +593,7 @@ interface RiderRouteRouteChildren {
 const RiderRouteRouteChildren: RiderRouteRouteChildren = {
   RiderDashboardRoute: RiderDashboardRoute,
   RiderEarningsRoute: RiderEarningsRoute,
+  RiderLoginRoute: RiderLoginRoute,
   RiderProfileRoute: RiderProfileRoute,
   RiderIndexRoute: RiderIndexRoute,
 }
@@ -504,12 +602,27 @@ const RiderRouteRouteWithChildren = RiderRouteRoute._addFileChildren(
   RiderRouteRouteChildren,
 )
 
+interface ConsumerRouteChildren {
+  ConsumerLoginRoute: typeof ConsumerLoginRoute
+  ConsumerIndexRoute: typeof ConsumerIndexRoute
+}
+
+const ConsumerRouteChildren: ConsumerRouteChildren = {
+  ConsumerLoginRoute: ConsumerLoginRoute,
+  ConsumerIndexRoute: ConsumerIndexRoute,
+}
+
+const ConsumerRouteWithChildren = ConsumerRoute._addFileChildren(
+  ConsumerRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRouteRoute: AdminRouteRouteWithChildren,
   RiderRouteRoute: RiderRouteRouteWithChildren,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
+  ConsumerRoute: ConsumerRouteWithChildren,
   LandingRoute: LandingRoute,
   OrdersRoute: OrdersRoute,
   PointsRoute: PointsRoute,

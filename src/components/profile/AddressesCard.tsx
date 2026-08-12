@@ -13,8 +13,8 @@ export function AddressesCard({ addresses, onAdd, onSetDefault, onDelete }: Addr
     <section className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
       <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
         <h2 className="flex items-center gap-2 text-sm font-bold text-gray-800">
-          <MapPin className="h-4 w-4 text-blue-600" /> Saved addresses
-          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-600">
+          <MapPin className="h-4 w-4 text-emerald-600" /> Saved addresses
+          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-600">
             {addresses.length}
           </span>
         </h2>

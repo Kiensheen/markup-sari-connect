@@ -20,10 +20,10 @@ const paymentLabel = (method: string) => {
 const statusBadge = (status: string) => {
   const map: Record<string, string> = {
     pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
-    confirmed: "bg-blue-100 text-blue-700 border-blue-200",
+    confirmed: "bg-emerald-100 text-emerald-700 border-emerald-200",
     assigned: "bg-indigo-100 text-indigo-700 border-indigo-200",
     picked_up: "bg-purple-100 text-purple-700 border-purple-200",
-    out_for_delivery: "bg-blue-100 text-blue-700 border-blue-200",
+    out_for_delivery: "bg-emerald-100 text-emerald-700 border-emerald-200",
     delivered: "bg-green-100 text-green-700 border-green-200",
     cancelled: "bg-red-100 text-red-700 border-red-200",
     delivery_failed: "bg-red-100 text-red-700 border-red-200",
@@ -82,7 +82,7 @@ function OrdersPage() {
       <div className="space-y-3">
         {userOrders.map((o) => {
           const isOpen = expanded === o.id;
-          const borderColor = o.status === "delivered" ? "border-l-green-500" : o.status === "cancelled" || o.status === "delivery_failed" ? "border-l-red-500" : "border-l-blue-500";
+          const borderColor = o.status === "delivered" ? "border-l-green-500" : o.status === "cancelled" || o.status === "delivery_failed" ? "border-l-red-500" : "border-l-emerald-500";
           return (
             <div key={o.id} className={`overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-100 border-l-4 ${borderColor}`}>
               <button
@@ -105,7 +105,7 @@ function OrdersPage() {
                 </div>
                 <div className="mt-2 flex justify-between text-sm">
                   <span className="text-gray-500">{o.items?.length ?? 0} item(s)</span>
-                  <span className="font-bold text-blue-600">{peso(o.total)}</span>
+                  <span className="font-bold text-emerald-600">{peso(o.total)}</span>
                 </div>
               </button>
 
@@ -129,7 +129,7 @@ function OrdersPage() {
                     </div>
                     <div className="flex justify-between font-semibold">
                       <span className="text-gray-800">Total</span>
-                      <span className="text-blue-600">{peso(o.total)}</span>
+                      <span className="text-emerald-600">{peso(o.total)}</span>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
                       {paymentLabel(o.payment_method)}

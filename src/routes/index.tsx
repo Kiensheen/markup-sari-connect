@@ -48,11 +48,13 @@ function Index() {
 
   return (
     <div className="space-y-4">
-      <section className="rounded-2xl bg-gradient-to-br from-blue-600 to-blue-500 p-5 text-white shadow-md">
-        <div className="flex items-center justify-between">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-500 p-5 text-white shadow-md">
+        <div className="pointer-events-none absolute -right-6 -top-10 h-32 w-32 rounded-full bg-white/10" />
+        <div className="pointer-events-none absolute -bottom-12 -left-8 h-40 w-40 rounded-full bg-white/5" />
+        <div className="relative flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold leading-tight">Wholesale made simple</h1>
-            <p className="mt-1 text-sm text-blue-100">Best prices. Fast delivery. Earn points on every order.</p>
+            <p className="mt-1 text-sm text-emerald-100">Best prices. Fast delivery. Earn points on every order.</p>
           </div>
           <div className="hidden rounded-xl bg-white/20 p-3 backdrop-blur-sm sm:block">
             <Package className="h-8 w-8 text-white" />
@@ -66,7 +68,7 @@ function Index() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search products, brands, categories..."
-          className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-3 text-sm outline-none shadow-sm placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-3 text-sm outline-none shadow-sm placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
         />
       </div>
 
@@ -78,8 +80,8 @@ function Index() {
               onClick={() => setCat(c)}
               className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-all ${
                 cat === c
-                  ? "border-blue-600 bg-blue-600 text-white shadow-sm"
-                  : "border-gray-200 bg-white text-gray-600 hover:border-blue-300 hover:text-blue-600 shadow-sm"
+                  ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
+                  : "border-gray-200 bg-white text-gray-600 hover:border-emerald-300 hover:text-emerald-600 shadow-sm"
               }`}
             >
               {c}
@@ -120,7 +122,7 @@ function Index() {
               <div className="flex flex-1 flex-col gap-1.5 p-3">
                 <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-gray-800">{p.name}</h3>
                 <div className="flex items-center gap-2">
-                  <span className="text-base font-bold text-blue-600">₱{Number(p.wholesale_price).toLocaleString()}</span>
+                  <span className="text-base font-bold text-emerald-600">₱{Number(p.wholesale_price).toLocaleString()}</span>
                   <span className="text-xs text-gray-400 line-through">₱{Number(p.price).toLocaleString()}</span>
                 </div>
                 {savings > 0 && (
@@ -136,7 +138,7 @@ function Index() {
                   ) : qty === 0 ? (
                     <button
                       onClick={() => handleIncrement(p)}
-                      className="flex w-full items-center justify-center gap-1 rounded-lg bg-blue-600 px-2 py-2.5 text-xs font-semibold text-white transition hover:bg-blue-700 active:scale-95"
+                      className="flex w-full items-center justify-center gap-1 rounded-lg bg-emerald-600 px-2 py-2.5 text-xs font-semibold text-white transition hover:bg-emerald-700 active:scale-95"
                     >
                       <Plus className="h-3.5 w-3.5" /> Add to Cart
                     </button>
@@ -153,7 +155,7 @@ function Index() {
                       <button
                         type="button"
                         onClick={() => handleIncrement(p)}
-                        className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors active:scale-95"
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-white hover:bg-emerald-700 transition-colors active:scale-95"
                       >
                         <Plus className="h-3.5 w-3.5" />
                       </button>

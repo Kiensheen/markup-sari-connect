@@ -1,25 +1,49 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from "lucide-react";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, CheckCircle } from "lucide-react";
 import { useMock } from "@/contexts/MockContext";
 import { DELIVERY_FEE } from "@/lib/mockData";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/cart")({
   component: CartPage,
+  validateSearch: (search: Record<string, unknown>): { success?: boolean } => ({
+    success: search.success === "true",
+  }),
 });
 
 function CartPage() {
   const { cartItems, cartTotal, updateCartQty, removeFromCart } = useMock();
   const navigate = useNavigate();
+  const search = useSearch({ from: "/cart" });
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // Show success message when returning from checkout
+  useEffect(() => {
+    if (search.success) {
+      setShowSuccess(true);
+      // Clear the success param from URL
+      navigate({ to: "/cart", replace: true });
+      // Auto-hide success message after 5 seconds
+      const timer = setTimeout(() => setShowSuccess(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [search.success, navigate]);
 
   if (cartItems.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
+        {showSuccess && (
+          <div className="mb-6 flex items-center gap-2 rounded-xl bg-green-50 px-4 py-3 text-green-700 ring-1 ring-green-200">
+            <CheckCircle className="h-5 w-5" />
+            <span className="font-medium">Order placed successfully! 🎉</span>
+          </div>
+        )}
         <div className="rounded-full bg-gray-100 p-6">
           <ShoppingBag className="h-12 w-12 text-gray-300" />
         </div>
         <h2 className="mt-4 text-xl font-bold text-gray-800">Your cart is empty</h2>
         <p className="mt-1 text-sm text-gray-500">Browse products and add items to get started.</p>
-        <Link to="/" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-md hover:bg-blue-700 transition-colors">
+        <Link to="/" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-md hover:bg-emerald-700 transition-colors">
           <ArrowLeft className="h-4 w-4" /> Shop Now
         </Link>
       </div>
@@ -45,7 +69,7 @@ function CartPage() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="line-clamp-2 text-sm font-semibold text-gray-800">{product.name}</p>
-              <p className="mt-1 text-sm font-bold text-blue-600">₱{product.wholesale_price.toLocaleString()}</p>
+              <p className="mt-1 text-sm font-bold text-emerald-600">₱{product.wholesale_price.toLocaleString()}</p>
               <p className="mt-0.5 text-xs text-green-600 font-medium">
                 Subtotal: ₱{(product.wholesale_price * quantity).toLocaleString()}
               </p>
@@ -91,7 +115,7 @@ function CartPage() {
         </div>
         <div className="mt-3 flex justify-between border-t border-gray-100 pt-3">
           <span className="font-semibold text-gray-800">Total</span>
-          <span className="text-lg font-bold text-blue-600">₱{(cartTotal + DELIVERY_FEE).toLocaleString()}</span>
+          <span className="text-lg font-bold text-emerald-600">₱{(cartTotal + DELIVERY_FEE).toLocaleString()}</span>
         </div>
       </div>
 
@@ -99,12 +123,12 @@ function CartPage() {
         <div className="mx-auto flex max-w-3xl items-center justify-between">
           <div className="hidden md:block">
             <span className="text-xs text-gray-500">Total</span>
-            <div className="text-lg font-bold text-blue-600">₱{(cartTotal + DELIVERY_FEE).toLocaleString()}</div>
+            <div className="text-lg font-bold text-emerald-600">₱{(cartTotal + DELIVERY_FEE).toLocaleString()}</div>
           </div>
           <button
             onClick={() => navigate({ to: "/checkout" })}
             disabled={cartItems.length === 0}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-8 py-3.5 text-sm font-semibold text-white shadow-md hover:bg-blue-700 transition-colors disabled:opacity-50 md:w-auto"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-8 py-3.5 text-sm font-semibold text-white shadow-md hover:bg-emerald-700 transition-colors disabled:opacity-50 md:w-auto"
           >
             Proceed to Checkout
             <ArrowLeft className="h-4 w-4 rotate-180" />

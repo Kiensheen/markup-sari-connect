@@ -11,6 +11,7 @@ import { type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { MockProvider } from "@/contexts/MockContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { ConsumerLayout } from "@/components/ConsumerLayout";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -79,20 +80,23 @@ function RootComponent() {
   const isRiderApp = location.pathname.startsWith("/rider");
   const isAdminApp = location.pathname.startsWith("/admin");
   const isLanding = location.pathname.startsWith("/landing");
-  const isBareApp = isRiderApp || isAdminApp || isLanding;
+  const isConsumerLogin = location.pathname === "/consumer/login";
+  const isBareApp = isRiderApp || isAdminApp || isLanding || isConsumerLogin;
 
   return (
     <QueryClientProvider client={queryClient}>
-      <MockProvider>
-        {isBareApp ? (
-          <Outlet />
-        ) : (
-          <ConsumerLayout>
+      <AuthProvider>
+        <MockProvider>
+          {isBareApp ? (
             <Outlet />
-          </ConsumerLayout>
-        )}
-        <Toaster />
-      </MockProvider>
+          ) : (
+            <ConsumerLayout>
+              <Outlet />
+            </ConsumerLayout>
+          )}
+          <Toaster />
+        </MockProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

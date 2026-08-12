@@ -23,7 +23,7 @@ export function ProfileHeader({
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-700 to-blue-600 p-6 text-white shadow-md">
+    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-700 to-emerald-600 p-6 text-white shadow-md">
       <div className="pointer-events-none absolute right-0 top-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-white/10" />
       <div className="pointer-events-none absolute bottom-0 left-1/2 h-24 w-24 -translate-x-1/2 translate-y-8 rounded-full bg-white/5" />
 
@@ -36,7 +36,7 @@ export function ProfileHeader({
               user.name.charAt(0).toUpperCase()
             )}
           </div>
-          <label className="absolute -bottom-1 -right-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-blue-600 text-white shadow-md ring-2 ring-white transition hover:bg-blue-700">
+          <label className="absolute -bottom-1 -right-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-emerald-600 text-white shadow-md ring-2 ring-white transition hover:bg-emerald-700">
             <Camera className="h-4 w-4" />
             <input
               type="file"
@@ -60,8 +60,8 @@ export function ProfileHeader({
 
         <div className="min-w-0 flex-1 text-center sm:text-left">
           <h1 className="truncate text-xl font-bold">{user.name}</h1>
-          <p className="truncate text-sm text-blue-100">{user.email}</p>
-          {user.phone && <p className="mt-0.5 text-xs text-blue-100">📞 {user.phone}</p>}
+          <p className="truncate text-sm text-emerald-100">{user.email}</p>
+          {user.phone && <p className="mt-0.5 text-xs text-emerald-100">📞 {user.phone}</p>}
           {user.store_name && (
             <p className="mt-1 inline-block max-w-full truncate rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-medium">
               🏪 {user.store_name}

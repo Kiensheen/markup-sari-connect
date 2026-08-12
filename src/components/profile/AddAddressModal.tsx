@@ -37,7 +37,7 @@ export function AddAddressModal({ open, onClose, onSave }: AddAddressModalProps)
   };
 
   const inputCls =
-    "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400";
+    "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 placeholder:text-gray-400";
   const labelCls = "mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500";
 
   return (
@@ -51,7 +51,7 @@ export function AddAddressModal({ open, onClose, onSave }: AddAddressModalProps)
       >
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-blue-600" />
+            <MapPin className="h-5 w-5 text-emerald-600" />
             <h2 className="text-lg font-bold text-gray-800">Add new address</h2>
           </div>
           <button type="button" onClick={onClose} aria-label="Close">

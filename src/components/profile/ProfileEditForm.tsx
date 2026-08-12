@@ -39,14 +39,14 @@ export function ProfileEditForm({ initial, saving, onSave, onCancel }: ProfileEd
   };
 
   const inputCls =
-    "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400";
+    "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 placeholder:text-gray-400";
   const labelCls = "mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500";
 
   return (
     <section className="space-y-5 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
       <div>
         <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-gray-800">
-          <UserIcon className="h-4 w-4 text-blue-600" /> Personal information
+          <UserIcon className="h-4 w-4 text-emerald-600" /> Personal information
         </h2>
         <div className="space-y-3">
           <label className="block">
@@ -124,7 +124,7 @@ export function ProfileEditForm({ initial, saving, onSave, onCancel }: ProfileEd
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-blue-700 disabled:opacity-60 active:scale-[0.98]"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-emerald-700 disabled:opacity-60 active:scale-[0.98]"
         >
           <Check className="h-4 w-4" /> {saving ? "Saving..." : "Save Changes"}
         </button>

@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Award, Gift, Package, CreditCard, Bell, HelpCircle, ChevronRight, X } from "lucide-react";
 import { useMock } from "@/contexts/MockContext";
 import { toast } from "sonner";
 import type { SavedAddress } from "@/lib/mockData";
+import { formatDate, peso } from "@/lib/mockData";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileEditForm, type ProfileEditValues } from "@/components/profile/ProfileEditForm";
 import { AddressesCard } from "@/components/profile/AddressesCard";
@@ -22,8 +23,8 @@ const menuItems = [
     icon: Package,
     label: "My Orders",
     to: "/orders" as const,
-    color: "text-blue-600",
-    bg: "bg-blue-50",
+    color: "text-emerald-600",
+    bg: "bg-emerald-50",
   },
   {
     icon: CreditCard,
@@ -41,7 +42,7 @@ const menuItems = [
 ];
 
 function ProfilePage() {
-  const { currentUser, updateUserProfile, adjustPoints } = useMock();
+  const { currentUser, updateUserProfile, adjustPoints, orders } = useMock();
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -181,14 +182,16 @@ function ProfilePage() {
         onDelete={handleDeleteAddress}
       />
 
-      <div className="rounded-2xl bg-gradient-to-br from-green-600 to-green-500 p-5 text-white shadow-md">
-        <div className="flex items-center justify-between">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-500 p-5 text-white shadow-md">
+        <div className="pointer-events-none absolute -right-6 -top-10 h-32 w-32 rounded-full bg-white/10" />
+        <div className="pointer-events-none absolute -bottom-12 -left-8 h-40 w-40 rounded-full bg-white/5" />
+        <div className="relative flex items-center justify-between">
           <div>
-            <div className="flex items-center gap-2 text-sm text-green-100">
+            <div className="flex items-center gap-2 text-sm text-emerald-100">
               <Award className="h-4 w-4" /> Points Balance
             </div>
             <p className="mt-1 text-4xl font-bold">{currentUser.points.toLocaleString()}</p>
-            <p className="mt-1 text-xs text-green-100">Earn 1 point for every ₱100 spent</p>
+            <p className="mt-1 text-xs text-emerald-100">Earn 1 point for every ₱100 spent</p>
           </div>
           <button
             type="button"
@@ -235,9 +238,20 @@ function ProfilePage() {
         })}
       </section>
 
+      {/* Order history */}
+      <section>
+        <Link to="/orders" className="mb-3 flex items-center justify-between group">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-700 group-hover:text-emerald-600 transition-colors">
+            <Package className="h-4 w-4 text-emerald-600" /> Order History
+          </h2>
+          <span className="text-xs text-emerald-600 font-medium group-hover:underline">View all</span>
+        </Link>
+        <OrderHistory />
+      </section>
+
       <section>
         <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700">
-          <Award className="h-4 w-4 text-blue-600" /> Points history
+          <Award className="h-4 w-4 text-emerald-600" /> Points history
         </h2>
         <div className="space-y-1.5">
           {txns.map((t) => (
@@ -312,7 +326,7 @@ function ProfilePage() {
                 type="button"
                 onClick={handleRedeem}
                 disabled={redeeming || currentUser.points < REDEEM_COST}
-                className="flex-1 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50"
+                className="flex-1 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
               >
                 {redeeming ? "Redeeming..." : "Confirm redeem"}
               </button>
@@ -321,5 +335,63 @@ function ProfilePage() {
         </div>
       )}
     </div>
+  );
+}
+
+function OrderHistory() {
+  const { orders, currentUser } = useMock();
+
+  const userOrders = orders
+    .filter((o) => o.consumer_id === currentUser.id)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 5);
+
+  if (userOrders.length === 0) {
+    return (
+      <div className="rounded-2xl bg-white py-8 text-center shadow-sm ring-1 ring-gray-100">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+          <Package className="h-6 w-6 text-gray-300" />
+        </div>
+        <p className="mt-3 text-sm font-medium text-gray-600">No orders yet</p>
+        <p className="mt-0.5 text-xs text-gray-400">Place your first order and it will show up here.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
+      <ul className="divide-y divide-gray-100">
+        {userOrders.map((o) => (
+          <li key={o.id} className="flex items-center justify-between gap-3 px-4 py-3.5">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-gray-800">
+                Order #{o.id.slice(0, 8).toUpperCase()}
+              </p>
+              <p className="mt-0.5 text-xs text-gray-400">{formatDate(o.created_at)}</p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2.5">
+              <span className="text-sm font-bold text-gray-800">{peso(o.total)}</span>
+              <StatusPill status={o.status} />
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function StatusPill({ status }: { status: string }) {
+  const blue = new Set(["pending", "confirmed", "assigned", "picked_up", "out_for_delivery"]);
+  const red = new Set(["cancelled", "delivery_failed"]);
+  const cls = blue.has(status)
+    ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+    : red.has(status)
+      ? "bg-red-50 text-red-600 ring-red-200"
+      : "bg-green-50 text-green-700 ring-green-200";
+
+  return (
+    <span className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ${cls}`}>
+      {status.replace("_", " ")}
+    </span>
   );
 }
