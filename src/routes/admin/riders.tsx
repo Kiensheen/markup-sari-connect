@@ -181,7 +181,7 @@ function AdminRiders() {
                 <div className="max-h-56 overflow-y-auto rounded-xl border border-slate-200">
                   {history.map((o) => (
                     <div key={o.id} className="flex justify-between border-b border-slate-100 px-3 py-2 text-sm last:border-0">
-                      <span className="font-mono text-xs text-slate-500">#{o.id.slice(0, 8)} · {o.status}</span>
+                      <span className="font-mono text-xs text-slate-500">{o.id} · {o.status}</span>
                       <span className="text-slate-600">{peso(o.delivery_fee)} · {formatDate(o.created_at)}</span>
                     </div>
                   ))}

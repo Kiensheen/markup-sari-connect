@@ -1,10 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { Award, Gift, Package, CreditCard, Bell, HelpCircle, ChevronRight, X } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { Award, Gift, CreditCard, Bell, HelpCircle, ChevronRight, ChevronDown, X } from "lucide-react";
 import { useMock } from "@/contexts/MockContext";
 import { toast } from "sonner";
 import type { SavedAddress } from "@/lib/mockData";
-import { formatDate, peso } from "@/lib/mockData";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileEditForm, type ProfileEditValues } from "@/components/profile/ProfileEditForm";
 import { AddressesCard } from "@/components/profile/AddressesCard";
@@ -19,13 +18,6 @@ const REDEEM_NAME = "₱50 off coupon";
 const REDEEM_VALUE = 50;
 
 const menuItems = [
-  {
-    icon: Package,
-    label: "My Orders",
-    to: "/orders" as const,
-    color: "text-emerald-600",
-    bg: "bg-emerald-50",
-  },
   {
     icon: CreditCard,
     label: "Payment Methods",
@@ -42,7 +34,7 @@ const menuItems = [
 ];
 
 function ProfilePage() {
-  const { currentUser, updateUserProfile, adjustPoints, orders } = useMock();
+  const { currentUser, updateUserProfile, adjustPoints } = useMock();
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -51,6 +43,7 @@ function ProfilePage() {
 
   const [redeemOpen, setRedeemOpen] = useState(false);
   const [redeeming, setRedeeming] = useState(false);
+  const [pointsOpen, setPointsOpen] = useState(true);
 
   useEffect(() => {
     setAddresses(currentUser.addresses ?? []);
@@ -59,14 +52,14 @@ function ProfilePage() {
   const txns = [
     {
       id: "t1",
-      source: "Order #o1 completed",
+      source: "Order MK-8F9K completed",
       points_earned: 2,
       points_redeemed: 0,
       created_at: "2026-07-01T10:00:00Z",
     },
     {
       id: "t2",
-      source: "Order #o3 completed",
+      source: "Order MK-5R2C completed",
       points_earned: 2,
       points_redeemed: 0,
       created_at: "2026-07-03T09:15:00Z",
@@ -208,73 +201,62 @@ function ProfilePage() {
       <section className="divide-y divide-gray-100 rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
         {menuItems.map((item, i) => {
           const Icon = item.icon;
-          const inner = (
-            <>
-              <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${item.bg}`}>
-                <Icon className={`h-4 w-4 ${item.color}`} />
-              </div>
-              <span className="flex-1 font-medium text-gray-700">{item.label}</span>
-              <ChevronRight className="h-4 w-4 text-gray-300" />
-            </>
-          );
-          return item.to ? (
-            <Link
-              key={i}
-              to={item.to}
-              className="flex items-center gap-3 p-4 text-sm transition hover:bg-gray-50"
-            >
-              {inner}
-            </Link>
-          ) : (
+          return (
             <button
               key={i}
               type="button"
               onClick={() => toast.info(`${item.label} coming soon`)}
               className="flex w-full items-center gap-3 p-4 text-left text-sm transition hover:bg-gray-50"
             >
-              {inner}
+              <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${item.bg}`}>
+                <Icon className={`h-4 w-4 ${item.color}`} />
+              </div>
+              <span className="flex-1 font-medium text-gray-700">{item.label}</span>
+              <ChevronRight className="h-4 w-4 text-gray-300" />
             </button>
           );
         })}
       </section>
 
-      {/* Order history */}
       <section>
-        <Link to="/orders" className="mb-3 flex items-center justify-between group">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-700 group-hover:text-emerald-600 transition-colors">
-            <Package className="h-4 w-4 text-emerald-600" /> Order History
+        <button
+          type="button"
+          onClick={() => setPointsOpen((v) => !v)}
+          className="mb-3 flex w-full items-center justify-between text-left"
+        >
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+            <Award className="h-4 w-4 text-emerald-600" /> Points history
           </h2>
-          <span className="text-xs text-emerald-600 font-medium group-hover:underline">View all</span>
-        </Link>
-        <OrderHistory />
-      </section>
-
-      <section>
-        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700">
-          <Award className="h-4 w-4 text-emerald-600" /> Points history
-        </h2>
-        <div className="space-y-1.5">
-          {txns.map((t) => (
-            <div
-              key={t.id}
-              className="flex items-center justify-between rounded-lg bg-white px-4 py-3 shadow-sm ring-1 ring-gray-100"
-            >
-              <div>
-                <p className="text-sm font-medium text-gray-800">{t.source}</p>
-                <p className="text-xs text-gray-500">
-                  {new Date(t.created_at).toLocaleDateString()}
-                </p>
-              </div>
-              <span
-                className={`text-sm font-bold ${
-                  t.points_earned > 0 ? "text-green-600" : "text-red-600"
-                }`}
+          <ChevronDown
+            className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${
+              pointsOpen ? "" : "-rotate-90"
+            }`}
+          />
+        </button>
+        {pointsOpen && (
+          <div className="space-y-1.5">
+            {txns.map((t) => (
+              <div
+                key={t.id}
+                className="flex items-center justify-between rounded-lg bg-white px-4 py-3 shadow-sm ring-1 ring-gray-100"
               >
-                {t.points_earned > 0 ? `+${t.points_earned}` : `-${t.points_redeemed}`}
-              </span>
-            </div>
-          ))}
-        </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-800">{t.source}</p>
+                  <p className="text-xs text-gray-500">
+                    {new Date(t.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+                <span
+                  className={`text-sm font-bold ${
+                    t.points_earned > 0 ? "text-green-600" : "text-red-600"
+                  }`}
+                >
+                  {t.points_earned > 0 ? `+${t.points_earned}` : `-${t.points_redeemed}`}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       <AddAddressModal open={addOpen} onClose={() => setAddOpen(false)} onSave={handleAddAddress} />
@@ -338,60 +320,3 @@ function ProfilePage() {
   );
 }
 
-function OrderHistory() {
-  const { orders, currentUser } = useMock();
-
-  const userOrders = orders
-    .filter((o) => o.consumer_id === currentUser.id)
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 5);
-
-  if (userOrders.length === 0) {
-    return (
-      <div className="rounded-2xl bg-white py-8 text-center shadow-sm ring-1 ring-gray-100">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-          <Package className="h-6 w-6 text-gray-300" />
-        </div>
-        <p className="mt-3 text-sm font-medium text-gray-600">No orders yet</p>
-        <p className="mt-0.5 text-xs text-gray-400">Place your first order and it will show up here.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
-      <ul className="divide-y divide-gray-100">
-        {userOrders.map((o) => (
-          <li key={o.id} className="flex items-center justify-between gap-3 px-4 py-3.5">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-gray-800">
-                Order #{o.id.slice(0, 8).toUpperCase()}
-              </p>
-              <p className="mt-0.5 text-xs text-gray-400">{formatDate(o.created_at)}</p>
-            </div>
-            <div className="flex shrink-0 items-center gap-2.5">
-              <span className="text-sm font-bold text-gray-800">{peso(o.total)}</span>
-              <StatusPill status={o.status} />
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function StatusPill({ status }: { status: string }) {
-  const blue = new Set(["pending", "confirmed", "assigned", "picked_up", "out_for_delivery"]);
-  const red = new Set(["cancelled", "delivery_failed"]);
-  const cls = blue.has(status)
-    ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-    : red.has(status)
-      ? "bg-red-50 text-red-600 ring-red-200"
-      : "bg-green-50 text-green-700 ring-green-200";
-
-  return (
-    <span className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ${cls}`}>
-      {status.replace("_", " ")}
-    </span>
-  );
-}

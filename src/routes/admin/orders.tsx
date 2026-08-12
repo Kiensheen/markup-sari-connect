@@ -132,7 +132,7 @@ function AdminOrders() {
             <tbody>
               {pageItems.map((o) => (
                 <tr key={o.id} className="border-t border-slate-100 transition-colors hover:bg-blue-50/40">
-                  <td className="px-4 py-3 font-mono text-xs text-slate-500">#{o.id.slice(0, 8)}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-slate-500">{o.id}</td>
                   <td className="px-4 py-3 font-medium text-slate-700">{profileMap[o.consumer_id]?.name || profileMap[o.consumer_id]?.email || "—"}</td>
                   <td className="px-4 py-3 text-slate-600">
                     {o.rider_id ? (profileMap[o.rider_id]?.name || "—") : <span className="text-slate-400">Unassigned</span>}
@@ -188,7 +188,7 @@ function AdminOrders() {
       <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Order #{selected?.id.slice(0, 8)}</DialogTitle>
+            <DialogTitle>Order {selected?.id}</DialogTitle>
             {selected && <p className="text-sm text-slate-500">{formatDate(selected.created_at)}</p>}
           </DialogHeader>
 
@@ -206,6 +206,7 @@ function AdminOrders() {
                   <div className="mt-1 text-sm text-slate-700">{selected.delivery_address || "—"}</div>
                   <div className="text-sm text-slate-500">Payment: {selected.payment_method.toUpperCase()}</div>
                   {selected.notes && <div className="mt-1 text-sm text-slate-500">Notes: {selected.notes}</div>}
+                  {selected.admin_note && <div className="mt-1 text-sm font-medium text-amber-600">Cancellation note: {selected.admin_note}</div>}
                 </div>
               </div>
 
@@ -268,8 +269,9 @@ function AdminOrders() {
             <button
               onClick={() => {
                 if (!selected) return;
-                updateOrderStatus(selected.id, "cancelled");
-                setSelected({ ...selected, status: "cancelled" });
+                const reason = prompt("Cancellation reason?");
+                updateOrderStatus(selected.id, "cancelled", reason ?? null);
+                setSelected({ ...selected, status: "cancelled", admin_note: reason ?? null });
                 toast.success("Order cancelled");
               }}
               className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100"

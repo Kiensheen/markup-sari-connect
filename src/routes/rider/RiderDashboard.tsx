@@ -89,8 +89,7 @@ export function RiderDashboard() {
             {currentUser.name.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-medium text-blue-100">Magandang araw! 👋</p>
-            <h1 className="truncate text-lg font-bold">{currentUser.name}</h1>
+            <h1 className="truncate text-base font-bold">{currentUser.name}</h1>
             <p className="text-xs text-blue-100">
               {active.length} active delivery{active.length === 1 ? "" : "ies"}
             </p>
@@ -107,11 +106,11 @@ export function RiderDashboard() {
         <div className="relative mt-4 grid grid-cols-2 divide-x divide-white/15 rounded-xl bg-white/10 py-3 text-center backdrop-blur-sm">
           <div>
             <p className="text-[11px] font-medium text-blue-100">EARNINGS TODAY</p>
-            <p className="mt-0.5 text-xl font-bold">{formatPeso(todayEarnings)}</p>
+            <p className="mt-0.5 text-lg font-bold">{formatPeso(todayEarnings)}</p>
           </div>
           <div>
             <p className="text-[11px] font-medium text-blue-100">THIS WEEK</p>
-            <p className="mt-0.5 text-xl font-bold">{formatPeso(weekEarnings)}</p>
+            <p className="mt-0.5 text-lg font-bold">{formatPeso(weekEarnings)}</p>
           </div>
         </div>
       </section>
@@ -119,7 +118,7 @@ export function RiderDashboard() {
       {/* Available deliveries */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="flex items-center gap-2 text-base font-bold text-gray-800">
+          <h2 className="flex items-center gap-2 text-sm font-bold text-gray-800">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-blue-700">
               <Package className="h-4 w-4" />
             </span>
@@ -282,7 +281,7 @@ function OrderCard({
             <Package className="h-4 w-4" />
           </div>
           <div>
-            <p className="text-sm font-bold text-gray-800">Order #{order.id.slice(0, 8).toUpperCase()}</p>
+            <p className="text-sm font-bold text-gray-800">Order {order.id}</p>
             <p className="text-[11px] text-gray-400">{timeAgo(order.created_at)}</p>
           </div>
         </div>
@@ -297,14 +296,13 @@ function OrderCard({
 
       <div className="px-4 py-3.5">
         {order.items.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-1.5">
+          <div className="mb-3 rounded-xl bg-blue-50/50 px-3 py-2">
+            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-blue-400">Items</p>
             {order.items.map((it, i) => (
-              <span
-                key={i}
-                className="inline-flex items-center rounded-full bg-gray-50 px-2.5 py-1 text-[11px] font-medium text-gray-600 ring-1 ring-gray-100"
-              >
-                {it.quantity}× {it.name}
-              </span>
+              <div key={i} className="flex items-center justify-between py-1 text-xs">
+                <span className="font-medium text-gray-800">{it.name}</span>
+                <span className="ml-2 shrink-0 text-gray-500">×{it.quantity}</span>
+              </div>
             ))}
           </div>
         )}

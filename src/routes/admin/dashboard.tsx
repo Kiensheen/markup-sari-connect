@@ -99,10 +99,6 @@ function AdminDashboard() {
         <div className="relative flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm font-medium text-blue-100">{today}</p>
-            <h2 className="mt-1 text-2xl font-bold">Good day, Admin</h2>
-            <p className="mt-1 text-sm text-blue-100">
-              Here's what's happening across your MarketUp store today.
-            </p>
           </div>
           <div className="flex gap-2">
             <Link
@@ -131,7 +127,7 @@ function AdminDashboard() {
                 <div className={`mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br ${c.tint} text-white shadow-sm`}>
                   <Icon className="h-4.5 w-4.5" />
                 </div>
-                <div className="text-xl font-bold tracking-tight text-slate-800">{c.value}</div>
+                <div className="text-lg font-bold tracking-tight text-slate-800">{c.value}</div>
                 <div className="text-xs font-medium text-slate-500">{c.label}</div>
                 <div className="mt-0.5 text-[11px] text-slate-400">{c.sub}</div>
               </CardContent>
@@ -205,7 +201,7 @@ function AdminDashboard() {
                 <tbody>
                   {recentOrders.map((o) => (
                     <tr key={o.id} className="border-b border-slate-50 transition-colors last:border-0 hover:bg-slate-50">
-                      <td className="px-5 py-3 font-mono text-xs text-slate-500">#{o.id.slice(0, 8)}</td>
+                      <td className="px-5 py-3 font-mono text-xs text-slate-500">{o.id}</td>
                       <td className="px-5 py-3 font-medium text-slate-700">{profileMap[o.consumer_id]?.name ?? "—"}</td>
                       <td className="px-5 py-3 font-semibold text-slate-800">{peso(o.total)}</td>
                       <td className="px-5 py-3">

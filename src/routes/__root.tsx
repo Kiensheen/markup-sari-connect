@@ -94,7 +94,7 @@ function RootComponent() {
               <Outlet />
             </ConsumerLayout>
           )}
-          <Toaster />
+          <Toaster position="top-center" />
         </MockProvider>
       </AuthProvider>
     </QueryClientProvider>

@@ -21,7 +21,7 @@ export function ConsumerLayout({ children }: { children: React.ReactNode }) {
   const { location } = useRouterState();
   const navigate = useNavigate();
   const { cartCount } = useMock();
-  const { isLoggedIn, getUsername, logout } = useAuth();
+  const { isLoggedIn, logout } = useAuth();
   const [bgColor, setBgColor] = useState(bgColorsBody[0]);
 
   // Checkout should highlight Cart tab, other exact matches
@@ -73,17 +73,14 @@ export function ConsumerLayout({ children }: { children: React.ReactNode }) {
             </Link>
             <div className="flex items-center gap-2">
               {isLoggedIn("consumer") ? (
-                <div className="flex max-w-[160px] items-center gap-1 rounded-full bg-white/15 py-1 pl-3 pr-1 text-sm text-white ring-1 ring-white/20">
-                  <span className="truncate">Hi, {getUsername("consumer")}</span>
-                  <button
-                    onClick={() => logout("consumer")}
-                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20 transition-colors hover:bg-white/30"
-                    aria-label="Log out"
-                    title="Log out"
-                  >
-                    <LogOut className="h-3 w-3" />
-                  </button>
-                </div>
+                <button
+                  onClick={() => logout("consumer")}
+                  className="flex items-center justify-center rounded-full bg-white/15 p-2 text-white ring-1 ring-white/20 transition-colors hover:bg-white/25"
+                  aria-label="Log out"
+                  title="Log out"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
               ) : (
                 <Link
                   to="/consumer/login"

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useMemo, useEffect, type ReactNode } from "react";
 import { useLocation } from "@tanstack/react-router";
-import { mockProducts, mockUsers, mockOrders, type Product, type Order, type User, type AdminStats, type RiderStats, type OrderItem, generateId, DELIVERY_FEE } from "@/lib/mockData";
+import { mockProducts, mockUsers, mockOrders, type Product, type Order, type User, type AdminStats, type RiderStats, type OrderItem, generateId, generateOrderId, DELIVERY_FEE } from "@/lib/mockData";
 
 interface MockContextValue {
   currentUser: User;
@@ -20,7 +20,7 @@ interface MockContextValue {
 
   createOrder: (address: string, phone: string, payment: string, notes?: string) => Order;
   cancelOrder: (orderId: string) => void;
-  updateOrderStatus: (orderId: string, status: string) => void;
+  updateOrderStatus: (orderId: string, status: string, adminNote?: string | null) => void;
   assignRider: (orderId: string, riderId: string) => void;
 
   acceptDelivery: (orderId: string) => void;
@@ -96,31 +96,29 @@ function getInitialUsers(): User[] {
 }
 
 export function MockProvider({ children }: { children: ReactNode }) {
-  // Initialize with consumer role (default), will be updated by useEffect on mount
-  const [role, setRole] = useState<'consumer' | 'rider' | 'admin'>('consumer');
   const [currentUser, setCurrentUser] = useState<User>(() => getInitialUsers()[0]);
+  // Role always comes from the user record, never from the URL path.
+  const role: 'consumer' | 'rider' | 'admin' = currentUser.role;
   const [orders, setOrders] = useState<Order[]>(getInitialOrders);
   const [products, setProducts] = useState<Product[]>(getInitialProducts);
   const [users, setUsers] = useState<User[]>(getInitialUsers);
   const [cartItems, setCartItems] = useState<{ product: Product; quantity: number }[]>(getInitialCart);
 
-  // Watch for URL changes and switch user based on route
+  // Dev-mode convenience: switch the mock user based on the route.
+  // This is ONLY for local testing. Authorization must read the role from
+  // currentUser.role (see AuthGuard), never from the URL path.
   const location = useLocation();
 
   useEffect(() => {
     const path = location.pathname;
-    let newRole: 'consumer' | 'rider' | 'admin' = 'consumer';
     let newUserId = 'u1';
 
     if (path.startsWith('/rider')) {
-      newRole = 'rider';
       newUserId = 'u2';
     } else if (path.startsWith('/admin')) {
-      newRole = 'admin';
       newUserId = 'u3';
     }
 
-    setRole(newRole);
     // Use persisted users when switching roles
     setCurrentUser(deepClone(users.find(u => u.id === newUserId) ?? mockUsers[0]));
   }, [location.pathname, users]);
@@ -199,7 +197,7 @@ export function MockProvider({ children }: { children: ReactNode }) {
       }));
       const total = cartTotal + DELIVERY_FEE;
       const newOrder: Order = {
-        id: `o${generateId()}`,
+        id: generateOrderId(),
         consumer_id: currentUser.id,
         rider_id: null,
         status: 'pending',
@@ -224,9 +222,17 @@ export function MockProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
-  const updateOrderStatus = useCallback((orderId: string, status: string) => {
+  const updateOrderStatus = useCallback((orderId: string, status: string, adminNote?: string | null) => {
     setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status: status as Order['status'] } : o))
+      prev.map((o) => {
+        if (o.id !== orderId) return o;
+        const next = { ...o, status: status as Order['status'] };
+        // Cancellation reason lives in admin_note, never in the customer's notes.
+        if (adminNote !== undefined) {
+          next.admin_note = adminNote ?? null;
+        }
+        return next;
+      })
     );
   }, []);
 

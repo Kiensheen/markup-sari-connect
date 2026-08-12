@@ -137,7 +137,7 @@ export function RiderEarnings() {
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-bold text-gray-800">
-                      Order #{d.id.slice(0, 8).toUpperCase()}
+                      Order {d.id}
                     </p>
                     <p className="truncate text-xs text-gray-400">{d.delivery_address ?? "—"}</p>
                     <p className="text-[11px] text-gray-400">{formatDate(d.created_at)}</p>

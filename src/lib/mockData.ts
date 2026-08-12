@@ -28,6 +28,7 @@ export interface Order {
   payment_method: string;
   delivery_address: string | null;
   notes: string | null;
+  admin_note?: string | null;
   items: OrderItem[];
   created_at: string;
   delivery_failure_reason?: string | null;
@@ -103,7 +104,7 @@ export const mockUsers: User[] = [
 export const mockOrders: Order[] = [
   // Today's orders
   {
-    id: 'o1',
+    id: 'MK-8F9K',
     consumer_id: 'u1',
     rider_id: 'u2',
     status: 'delivered',
@@ -119,7 +120,7 @@ export const mockOrders: Order[] = [
     created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
   },
   {
-    id: 'o2',
+    id: 'MK-3A7Q',
     consumer_id: 'u1',
     rider_id: null,
     status: 'pending',
@@ -135,7 +136,7 @@ export const mockOrders: Order[] = [
   },
   // Yesterday's orders
   {
-    id: 'o3',
+    id: 'MK-5R2C',
     consumer_id: 'u1',
     rider_id: 'u2',
     status: 'delivered',
@@ -150,7 +151,7 @@ export const mockOrders: Order[] = [
     created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // yesterday
   },
   {
-    id: 'o4',
+    id: 'MK-9K4D',
     consumer_id: 'u1',
     rider_id: 'u2',
     status: 'delivered',
@@ -168,7 +169,7 @@ export const mockOrders: Order[] = [
   },
   // Earlier this week
   {
-    id: 'o5',
+    id: 'MK-2H7P',
     consumer_id: 'u1',
     rider_id: 'u2',
     status: 'delivered',
@@ -184,7 +185,7 @@ export const mockOrders: Order[] = [
     created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
   },
   {
-    id: 'o6',
+    id: 'MK-6N4S',
     consumer_id: 'u1',
     rider_id: 'u2',
     status: 'delivered',
@@ -200,7 +201,7 @@ export const mockOrders: Order[] = [
     created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), // 4 days ago
   },
   {
-    id: 'o7',
+    id: 'MK-7K3M',
     consumer_id: 'u1',
     rider_id: null,
     status: 'cancelled',
@@ -217,7 +218,7 @@ export const mockOrders: Order[] = [
   },
   // Active delivery (for rider)
   {
-    id: 'o8',
+    id: 'MK-4R9T',
     consumer_id: 'u1',
     rider_id: 'u2',
     status: 'out_for_delivery',
@@ -234,7 +235,7 @@ export const mockOrders: Order[] = [
   },
   // Another pending order
   {
-    id: 'o9',
+    id: 'MK-5W8L',
     consumer_id: 'u1',
     rider_id: null,
     status: 'pending',
@@ -251,7 +252,7 @@ export const mockOrders: Order[] = [
   },
   // Confirmed order (rider accepted, waiting for pickup)
   {
-    id: 'o10',
+    id: 'MK-9Q2V',
     consumer_id: 'u1',
     rider_id: 'u2',
     status: 'confirmed',
@@ -326,6 +327,18 @@ export const PRODUCT_CATEGORIES = [
 
 export function generateId(): string {
   return Math.random().toString(36).substring(2, 10);
+}
+
+// Order reference codes (e.g. "MK-8F9K"): short, brand-prefixed, and random so the
+// sequence never reveals order count. Uses an unambiguous alphabet (no 0/O/1/I/B/D)
+// so codes are easy to read aloud over the phone.
+const ORDER_ID_CHARS = "23456789ACEFGHJKLMNPQRSTUVWXYZ";
+export function generateOrderId(): string {
+  let code = "";
+  for (let i = 0; i < 4; i++) {
+    code += ORDER_ID_CHARS[Math.floor(Math.random() * ORDER_ID_CHARS.length)];
+  }
+  return `MK-${code}`;
 }
 
 // Guest mode helpers (kept for backward compat with unused routes)
