@@ -9,6 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SupportRouteImport } from './routes/support'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PointsRouteImport } from './routes/points'
 import { Route as OrdersRouteImport } from './routes/orders'
@@ -27,6 +30,7 @@ import { Route as RiderLoginRouteImport } from './routes/rider/login'
 import { Route as RiderEarningsRouteImport } from './routes/rider/earnings'
 import { Route as RiderDashboardRouteImport } from './routes/rider/dashboard'
 import { Route as ConsumerLoginRouteImport } from './routes/consumer/login'
+import { Route as AdminSupportRouteImport } from './routes/admin/support'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminRidersRouteImport } from './routes/admin/riders'
 import { Route as AdminReportsRouteImport } from './routes/admin/reports'
@@ -37,6 +41,21 @@ import { Route as AdminInventoryRouteImport } from './routes/admin/inventory'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminConsumersRouteImport } from './routes/admin/consumers'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -127,6 +146,11 @@ const ConsumerLoginRoute = ConsumerLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => ConsumerRoute,
 } as any)
+const AdminSupportRoute = AdminSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -184,6 +208,9 @@ export interface FileRoutesByFullPath {
   '/orders': typeof OrdersRoute
   '/points': typeof PointsRoute
   '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
+  '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/admin/consumers': typeof AdminConsumersRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/inventory': typeof AdminInventoryRoute
@@ -193,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/admin/reports': typeof AdminReportsRoute
   '/admin/riders': typeof AdminRidersRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/support': typeof AdminSupportRoute
   '/consumer/login': typeof ConsumerLoginRoute
   '/rider/dashboard': typeof RiderDashboardRoute
   '/rider/earnings': typeof RiderEarningsRoute
@@ -210,6 +238,9 @@ export interface FileRoutesByTo {
   '/orders': typeof OrdersRoute
   '/points': typeof PointsRoute
   '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
+  '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/admin/consumers': typeof AdminConsumersRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/inventory': typeof AdminInventoryRoute
@@ -219,6 +250,7 @@ export interface FileRoutesByTo {
   '/admin/reports': typeof AdminReportsRoute
   '/admin/riders': typeof AdminRidersRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/support': typeof AdminSupportRoute
   '/consumer/login': typeof ConsumerLoginRoute
   '/rider/dashboard': typeof RiderDashboardRoute
   '/rider/earnings': typeof RiderEarningsRoute
@@ -240,6 +272,9 @@ export interface FileRoutesById {
   '/orders': typeof OrdersRoute
   '/points': typeof PointsRoute
   '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
+  '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/admin/consumers': typeof AdminConsumersRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/inventory': typeof AdminInventoryRoute
@@ -249,6 +284,7 @@ export interface FileRoutesById {
   '/admin/reports': typeof AdminReportsRoute
   '/admin/riders': typeof AdminRidersRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/support': typeof AdminSupportRoute
   '/consumer/login': typeof ConsumerLoginRoute
   '/rider/dashboard': typeof RiderDashboardRoute
   '/rider/earnings': typeof RiderEarningsRoute
@@ -271,6 +307,9 @@ export interface FileRouteTypes {
     | '/orders'
     | '/points'
     | '/profile'
+    | '/settings'
+    | '/support'
+    | '/terms'
     | '/admin/consumers'
     | '/admin/dashboard'
     | '/admin/inventory'
@@ -280,6 +319,7 @@ export interface FileRouteTypes {
     | '/admin/reports'
     | '/admin/riders'
     | '/admin/settings'
+    | '/admin/support'
     | '/consumer/login'
     | '/rider/dashboard'
     | '/rider/earnings'
@@ -297,6 +337,9 @@ export interface FileRouteTypes {
     | '/orders'
     | '/points'
     | '/profile'
+    | '/settings'
+    | '/support'
+    | '/terms'
     | '/admin/consumers'
     | '/admin/dashboard'
     | '/admin/inventory'
@@ -306,6 +349,7 @@ export interface FileRouteTypes {
     | '/admin/reports'
     | '/admin/riders'
     | '/admin/settings'
+    | '/admin/support'
     | '/consumer/login'
     | '/rider/dashboard'
     | '/rider/earnings'
@@ -326,6 +370,9 @@ export interface FileRouteTypes {
     | '/orders'
     | '/points'
     | '/profile'
+    | '/settings'
+    | '/support'
+    | '/terms'
     | '/admin/consumers'
     | '/admin/dashboard'
     | '/admin/inventory'
@@ -335,6 +382,7 @@ export interface FileRouteTypes {
     | '/admin/reports'
     | '/admin/riders'
     | '/admin/settings'
+    | '/admin/support'
     | '/consumer/login'
     | '/rider/dashboard'
     | '/rider/earnings'
@@ -356,10 +404,34 @@ export interface RootRouteChildren {
   OrdersRoute: typeof OrdersRoute
   PointsRoute: typeof PointsRoute
   ProfileRoute: typeof ProfileRoute
+  SettingsRoute: typeof SettingsRoute
+  SupportRoute: typeof SupportRoute
+  TermsRoute: typeof TermsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -486,6 +558,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsumerLoginRouteImport
       parentRoute: typeof ConsumerRoute
     }
+    '/admin/support': {
+      id: '/admin/support'
+      path: '/support'
+      fullPath: '/admin/support'
+      preLoaderRoute: typeof AdminSupportRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/settings': {
       id: '/admin/settings'
       path: '/settings'
@@ -562,6 +641,7 @@ interface AdminRouteRouteChildren {
   AdminReportsRoute: typeof AdminReportsRoute
   AdminRidersRoute: typeof AdminRidersRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminSupportRoute: typeof AdminSupportRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -575,6 +655,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminReportsRoute: AdminReportsRoute,
   AdminRidersRoute: AdminRidersRoute,
   AdminSettingsRoute: AdminSettingsRoute,
+  AdminSupportRoute: AdminSupportRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
@@ -627,6 +708,9 @@ const rootRouteChildren: RootRouteChildren = {
   OrdersRoute: OrdersRoute,
   PointsRoute: PointsRoute,
   ProfileRoute: ProfileRoute,
+  SettingsRoute: SettingsRoute,
+  SupportRoute: SupportRoute,
+  TermsRoute: TermsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

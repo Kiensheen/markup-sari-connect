@@ -1,13 +1,20 @@
 import { useState } from "react";
-import { Check, Clock, Store, User as UserIcon, X } from "lucide-react";
+import { Check, Clock, Store, User as UserIcon, X, MapPin, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 
 export interface ProfileEditValues {
-  name: string;
+  first_name: string;
+  middle_name: string | null;
+  last_name: string;
+  age: number | null;
+  shopee_handle: string | null;
+  lazada_handle: string | null;
   email: string;
   phone: string;
+  address: string;
   store_name: string | null;
   store_hours: string | null;
+  name: string;
 }
 
 interface ProfileEditFormProps {
@@ -18,23 +25,47 @@ interface ProfileEditFormProps {
 }
 
 export function ProfileEditForm({ initial, saving, onSave, onCancel }: ProfileEditFormProps) {
-  const [name, setName] = useState(initial.name);
+  const [firstName, setFirstName] = useState(initial.first_name);
+  const [middleName, setMiddleName] = useState(initial.middle_name ?? "");
+  const [lastName, setLastName] = useState(initial.last_name);
+  const [age, setAge] = useState(initial.age?.toString() ?? "");
+  const [shopeeHandle, setShopeeHandle] = useState(initial.shopee_handle ?? "");
+  const [lazadaHandle, setLazadaHandle] = useState(initial.lazada_handle ?? "");
   const [email, setEmail] = useState(initial.email);
   const [phone, setPhone] = useState(initial.phone);
+  const [address, setAddress] = useState(initial.address);
   const [storeName, setStoreName] = useState(initial.store_name ?? "");
   const [storeHours, setStoreHours] = useState(initial.store_hours ?? "");
 
   const handleSave = () => {
-    if (!name.trim() || !phone.trim()) {
-      toast.error("Name and phone are required");
+    if (!firstName.trim() || !lastName.trim() || !phone.trim()) {
+      toast.error("First name, surname, and phone are required");
+      return;
+    }
+    const trimmedMiddle = middleName.trim();
+    const trimmedFirstName = firstName.trim();
+    const trimmedLastName = lastName.trim();
+    const computedName = [trimmedFirstName, trimmedMiddle, trimmedLastName]
+      .filter(Boolean)
+      .join(" ");
+    const ageNum = age.trim() ? Number(age.trim()) : null;
+    if (age.trim() && (Number.isNaN(ageNum) || ageNum! < 0 || ageNum! > 130)) {
+      toast.error("Please enter a valid age");
       return;
     }
     onSave({
-      name: name.trim(),
+      first_name: trimmedFirstName,
+      middle_name: trimmedMiddle || null,
+      last_name: trimmedLastName,
+      age: ageNum,
+      shopee_handle: shopeeHandle.trim() || null,
+      lazada_handle: lazadaHandle.trim() || null,
       email: email.trim(),
       phone: phone.trim(),
+      address: address.trim(),
       store_name: storeName.trim() || null,
       store_hours: storeHours.trim() || null,
+      name: computedName,
     });
   };
 
@@ -49,15 +80,47 @@ export function ProfileEditForm({ initial, saving, onSave, onCancel }: ProfileEd
           <UserIcon className="h-4 w-4 text-emerald-600" /> Personal information
         </h2>
         <div className="space-y-3">
-          <label className="block">
-            <span className={labelCls}>Full name</span>
-            <input
-              className={inputCls}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Your name"
-            />
-          </label>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className="block">
+              <span className={labelCls}>First name</span>
+              <input
+                className={inputCls}
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="First name"
+              />
+            </label>
+            <label className="block">
+              <span className={labelCls}>Middle name (optional)</span>
+              <input
+                className={inputCls}
+                value={middleName}
+                onChange={(e) => setMiddleName(e.target.value)}
+                placeholder="Middle name"
+              />
+            </label>
+            <label className="block">
+              <span className={labelCls}>Surname / last name</span>
+              <input
+                className={inputCls}
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Surname"
+              />
+            </label>
+            <label className="block">
+              <span className={labelCls}>Age (optional)</span>
+              <input
+                type="number"
+                min={0}
+                max={130}
+                className={inputCls}
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+                placeholder="e.g., 35"
+              />
+            </label>
+          </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="block">
               <span className={labelCls}>Email</span>
@@ -81,6 +144,48 @@ export function ProfileEditForm({ initial, saving, onSave, onCancel }: ProfileEd
             </label>
           </div>
         </div>
+      </div>
+
+      <div className="border-t border-gray-100 pt-4">
+        <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-gray-800">
+          <ShoppingBag className="h-4 w-4 text-emerald-600" /> Other platforms (optional)
+        </h2>
+        <div className="space-y-3">
+          <label className="block">
+            <span className={labelCls}>Shopee handle / store link</span>
+            <input
+              className={inputCls}
+              value={shopeeHandle}
+              onChange={(e) => setShopeeHandle(e.target.value)}
+              placeholder="e.g., shopee.ph/mystore"
+            />
+          </label>
+          <label className="block">
+            <span className={labelCls}>Lazada handle / store link</span>
+            <input
+              className={inputCls}
+              value={lazadaHandle}
+              onChange={(e) => setLazadaHandle(e.target.value)}
+              placeholder="e.g., lazada.com.ph/shop/mystore"
+            />
+          </label>
+        </div>
+      </div>
+
+      <div className="border-t border-gray-100 pt-4">
+        <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-gray-800">
+          <MapPin className="h-4 w-4 text-emerald-600" /> Address
+        </h2>
+        <label className="block">
+          <span className={labelCls}>Delivery address</span>
+          <textarea
+            rows={3}
+            className={inputCls}
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder="House/Unit No., Street, Barangay, City, Province"
+          />
+        </label>
       </div>
 
       <div className="border-t border-gray-100 pt-4">

@@ -9,6 +9,7 @@ import {
   Boxes,
   BarChart3,
   Settings,
+  MessageCircle,
   ChevronLeft,
   ChevronRight,
   Menu,
@@ -46,7 +47,10 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
   },
   {
     title: "System",
-    items: [{ to: "/admin/settings", label: "Settings", icon: Settings }],
+    items: [
+      { to: "/admin/support", label: "Support", icon: MessageCircle },
+      { to: "/admin/settings", label: "Settings", icon: Settings },
+    ],
   },
 ];
 
@@ -61,6 +65,7 @@ function pageTitle(pathname: string): string {
     inventory: "Inventory",
     reports: "Reports",
     settings: "Settings",
+    support: "Support",
   };
   return map[seg] ?? "Dashboard";
 }

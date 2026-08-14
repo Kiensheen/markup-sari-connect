@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ChevronDown, ChevronUp, RotateCcw, XCircle, Package, Clock, CheckCircle, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronUp, RotateCcw, XCircle, Package, Clock, CheckCircle, X, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { useMock } from "@/contexts/MockContext";
 import { OrderProgressBar } from "@/components/OrderProgressBar";
 import { formatDate, peso } from "@/lib/mockData";
@@ -42,7 +42,7 @@ const statusIcon = (status: string) => {
 };
 
 function OrdersPage() {
-  const { orders, cancelOrder, currentUser, products, addToCart } = useMock();
+  const { orders, cancelOrder, deleteOrder, currentUser, products, addToCart } = useMock();
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState<string | null>(null);
   const [cancelConfirm, setCancelConfirm] = useState<string | null>(null);
@@ -58,6 +58,14 @@ function OrdersPage() {
     setCancelConfirm(null);
     setExpanded(null);
     toast.success("Order cancelled");
+  };
+
+  const handleDelete = (orderId: string) => {
+    const ok = window.confirm("Delete this completed order from your history?");
+    if (!ok) return;
+    deleteOrder(orderId);
+    setExpanded(null);
+    toast.success("Order deleted");
   };
 
   const handleReorder = (orderId: string) => {
@@ -166,15 +174,26 @@ function OrdersPage() {
                     <div className="sticky bottom-0 border-t border-gray-100 bg-white px-3 py-2.5">
                       <div className="flex flex-wrap gap-2">
                         {o.status === "delivered" && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            type="button"
-                            onClick={() => handleReorder(o.id)}
-                            className="gap-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                          >
-                            <RotateCcw className="h-3 w-3" /> Reorder
-                          </Button>
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              type="button"
+                              onClick={() => handleReorder(o.id)}
+                              className="gap-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                            >
+                              <RotateCcw className="h-3 w-3" /> Reorder
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              type="button"
+                              onClick={() => handleDelete(o.id)}
+                              className="gap-1 border-red-200 text-red-600 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-3 w-3" /> Delete
+                            </Button>
+                          </>
                         )}
                         {o.status === "pending" &&
                           (cancelConfirm === o.id ? (

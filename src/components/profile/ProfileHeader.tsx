@@ -1,5 +1,6 @@
 import { Camera, Pencil, X } from "lucide-react";
 import type { User } from "@/lib/mockData";
+import { displayName } from "@/lib/mockData";
 
 interface ProfileHeaderProps {
   user: User;
@@ -22,6 +23,9 @@ export function ProfileHeader({
     e.target.value = "";
   };
 
+  const userDisplayName = displayName(user);
+  const initial = userDisplayName.charAt(0).toUpperCase();
+
   return (
     <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-700 to-emerald-600 p-6 text-white shadow-md">
       <div className="pointer-events-none absolute right-0 top-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-white/10" />
@@ -31,9 +35,9 @@ export function ProfileHeader({
         <div className="relative shrink-0">
           <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-white/20 text-4xl font-bold ring-2 ring-white/30 backdrop-blur-sm">
             {user.avatar_url ? (
-              <img src={user.avatar_url} alt={user.name} className="h-full w-full object-cover" />
+              <img src={user.avatar_url} alt={userDisplayName} className="h-full w-full object-cover" />
             ) : (
-              user.name.charAt(0).toUpperCase()
+              initial
             )}
           </div>
           <label className="absolute -bottom-1 -right-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-emerald-600 text-white shadow-md ring-2 ring-white transition hover:bg-emerald-700">
@@ -59,7 +63,7 @@ export function ProfileHeader({
         </div>
 
         <div className="min-w-0 flex-1 text-center sm:text-left">
-          <h1 className="truncate text-xl font-bold">{user.name}</h1>
+          <h1 className="truncate text-xl font-bold">{userDisplayName}</h1>
           <p className="truncate text-sm text-emerald-100">{user.email}</p>
           {user.phone && <p className="mt-0.5 text-xs text-emerald-100">📞 {user.phone}</p>}
           {user.store_name && (

@@ -36,22 +36,19 @@ export interface Order {
   delivery_failure_at?: string | null;
 }
 
-export interface SavedAddress {
-  id: string;
-  label: string;
-  address: string;
-  phone?: string;
-  is_default?: boolean;
-}
-
 export interface User {
   id: string;
   email: string;
   name: string;
+  first_name?: string;
+  middle_name?: string | null;
+  last_name?: string;
+  age?: number | null;
+  shopee_handle?: string | null;
+  lazada_handle?: string | null;
   role: 'consumer' | 'rider' | 'admin';
   phone: string;
   address: string;
-  addresses?: SavedAddress[];
   store_name?: string | null;
   store_hours?: string | null;
   points: number;
@@ -59,6 +56,31 @@ export interface User {
   is_blocked?: boolean;
   blocked_until?: string | null;
   created_at?: string;
+}
+
+// Computed display name: first + middle + last, falling back to the stored
+// `name` when the split fields aren't populated (e.g. rider/admin mock users).
+export function displayName(u: Pick<User, 'first_name' | 'middle_name' | 'last_name' | 'name'>): string {
+  const parts = [u.first_name, u.middle_name, u.last_name].filter(Boolean).join(' ').trim();
+  return parts || u.name || '';
+}
+
+// Support chat: one thread per consumer, shared between the consumer's
+// Support page and the admin Support inbox. No real-time layer — both sides
+// read/write the same mock list (persisted to localStorage like everything else).
+export interface SupportMessage {
+  id: string;
+  sender: 'consumer' | 'admin';
+  text: string;
+  created_at: string;
+}
+
+export interface SupportThread {
+  id: string;
+  consumer_id: string;
+  consumer_name: string;
+  messages: SupportMessage[];
+  created_at: string;
 }
 
 export interface RiderStats {
@@ -92,13 +114,10 @@ export const mockProducts: Product[] = [
 ];
 
 export const mockUsers: User[] = [
-  { id: 'u1', email: 'consumer@marketup.com', name: 'John Consumer', role: 'consumer', phone: '09123456789', address: '123 Main St, Manila', store_name: "John's Sari-Sari Store", store_hours: '8:00 AM – 8:00 PM', addresses: [
-    { id: 'a1', label: 'Home / Store', address: '123 Main St, Manila', phone: '09123456789', is_default: true },
-    { id: 'a2', label: 'Warehouse', address: '456 Bodega Ave, Quezon City', phone: '09123456789' },
-  ], points: 450, avatar_url: null, created_at: '2026-01-15T08:00:00Z' },
+  { id: 'u1', email: 'consumer@marketup.com', name: 'John Consumer', first_name: 'John', last_name: 'Consumer', role: 'consumer', phone: '09123456789', address: '123 Main St, Manila', store_name: "John's Sari-Sari Store", store_hours: '8:00 AM – 8:00 PM', points: 450, avatar_url: null, created_at: '2026-01-15T08:00:00Z' },
   { id: 'u2', email: 'rider@marketup.com', name: 'Jane Rider', role: 'rider', phone: '09876543210', address: '456 Oak Ave, Quezon City', points: 0, avatar_url: null, created_at: '2026-02-20T10:00:00Z' },
   { id: 'u3', email: 'admin@marketup.com', name: 'Admin User', role: 'admin', phone: '09123456780', address: '789 Pine Rd, Makati', points: 0, avatar_url: null, created_at: '2026-01-01T00:00:00Z' },
-  { id: 'u4', email: 'guest@marketup.com', name: 'Guest User', role: 'consumer', phone: '', address: '', store_name: 'Guest Store', store_hours: null, addresses: [], points: 0, avatar_url: null, created_at: '2026-07-01T00:00:00Z' },
+  { id: 'u4', email: 'guest@marketup.com', name: 'Guest User', first_name: 'Guest', last_name: 'User', role: 'consumer', phone: '', address: '', store_name: 'Guest Store', store_hours: null, points: 0, avatar_url: null, created_at: '2026-07-01T00:00:00Z' },
 ];
 
 export const mockOrders: Order[] = [

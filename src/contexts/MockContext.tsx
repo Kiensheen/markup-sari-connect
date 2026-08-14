@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useMemo, useEffect, type ReactNode } from "react";
 import { useLocation } from "@tanstack/react-router";
-import { mockProducts, mockUsers, mockOrders, type Product, type Order, type User, type AdminStats, type RiderStats, type OrderItem, generateId, generateOrderId, DELIVERY_FEE } from "@/lib/mockData";
+import { mockProducts, mockUsers, mockOrders, type Product, type Order, type User, type AdminStats, type RiderStats, type OrderItem, type SupportThread, generateId, generateOrderId, DELIVERY_FEE } from "@/lib/mockData";
 
 interface MockContextValue {
   currentUser: User;
@@ -9,6 +9,7 @@ interface MockContextValue {
   products: Product[];
   orders: Order[];
   users: User[];
+  supportThreads: SupportThread[];
 
   addToCart: (product: Product) => void;
   removeFromCart: (productId: string) => void;
@@ -20,6 +21,7 @@ interface MockContextValue {
 
   createOrder: (address: string, phone: string, payment: string, notes?: string) => Order;
   cancelOrder: (orderId: string) => void;
+  deleteOrder: (orderId: string) => void;
   updateOrderStatus: (orderId: string, status: string, adminNote?: string | null) => void;
   assignRider: (orderId: string, riderId: string) => void;
 
@@ -37,6 +39,12 @@ interface MockContextValue {
   unblockUser: (userId: string) => void;
   adjustPoints: (userId: string, delta: number) => void;
 
+  sendSupportMessage: (consumerId: string, text: string) => void;
+  replySupportMessage: (threadId: string, text: string) => void;
+
+  notificationsEnabled: boolean;
+  setNotificationsEnabled: (enabled: boolean) => void;
+
   riderStats: RiderStats;
   adminStats: AdminStats;
 }
@@ -53,6 +61,8 @@ const STORAGE_KEYS = {
   orders: 'marketup_orders',
   products: 'marketup_products',
   users: 'marketup_users',
+  support_threads: 'marketup_support_threads',
+  notifications_enabled: 'marketup_notifications_enabled',
 } as const;
 
 // Helper to load from localStorage
@@ -95,6 +105,10 @@ function getInitialUsers(): User[] {
   return saved ?? deepClone(mockUsers);
 }
 
+function getInitialSupportThreads(): SupportThread[] {
+  return loadFromStorage<SupportThread[] | null>(STORAGE_KEYS.support_threads, null) ?? [];
+}
+
 export function MockProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User>(() => getInitialUsers()[0]);
   // Role always comes from the user record, never from the URL path.
@@ -103,6 +117,10 @@ export function MockProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>(getInitialProducts);
   const [users, setUsers] = useState<User[]>(getInitialUsers);
   const [cartItems, setCartItems] = useState<{ product: Product; quantity: number }[]>(getInitialCart);
+  const [supportThreads, setSupportThreads] = useState<SupportThread[]>(getInitialSupportThreads);
+  const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(
+    () => loadFromStorage<boolean | null>(STORAGE_KEYS.notifications_enabled, null) ?? true,
+  );
 
   // Dev-mode convenience: switch the mock user based on the route.
   // This is ONLY for local testing. Authorization must read the role from
@@ -137,6 +155,16 @@ export function MockProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     saveToStorage(STORAGE_KEYS.users, users);
   }, [users]);
+
+  // Persist support threads to localStorage
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.support_threads, supportThreads);
+  }, [supportThreads]);
+
+  // Persist notification preference to localStorage
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.notifications_enabled, notificationsEnabled);
+  }, [notificationsEnabled]);
 
   // Persist cart to localStorage
   useEffect(() => {
@@ -222,6 +250,15 @@ export function MockProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  const deleteOrder = useCallback((orderId: string) => {
+    setOrders((prev) => {
+      // Only completed (delivered) orders may be removed from history.
+      const target = prev.find((o) => o.id === orderId);
+      if (!target || target.status !== 'delivered') return prev;
+      return prev.filter((o) => o.id !== orderId);
+    });
+  }, []);
+
   const updateOrderStatus = useCallback((orderId: string, status: string, adminNote?: string | null) => {
     setOrders((prev) =>
       prev.map((o) => {
@@ -302,6 +339,49 @@ export function MockProvider({ children }: { children: ReactNode }) {
     }
   }, [currentUser.id]);
 
+  const sendSupportMessage = useCallback((consumerId: string, text: string) => {
+    setSupportThreads((prev) => {
+      // Find or create thread for this consumer
+      const consumer = users.find((u) => u.id === consumerId);
+      if (!consumer) return prev;
+
+      let thread = prev.find((t) => t.consumer_id === consumerId);
+      if (!thread) {
+        thread = {
+          id: `st${generateId()}`,
+          consumer_id: consumerId,
+          consumer_name: consumer.name,
+          messages: [],
+          created_at: new Date().toISOString(),
+        };
+        prev = [...prev, thread];
+      }
+
+      const newMessage = {
+        id: `sm${generateId()}`,
+        sender: 'consumer' as const,
+        text,
+        created_at: new Date().toISOString(),
+      };
+      return prev.map((t) => (t.id === thread!.id ? { ...t, messages: [...t.messages, newMessage] } : t));
+    });
+  }, [users]);
+
+  const replySupportMessage = useCallback((threadId: string, text: string) => {
+    setSupportThreads((prev) => {
+      const thread = prev.find((t) => t.id === threadId);
+      if (!thread) return prev;
+
+      const newMessage = {
+        id: `sm${generateId()}`,
+        sender: 'admin' as const,
+        text,
+        created_at: new Date().toISOString(),
+      };
+      return prev.map((t) => (t.id === threadId ? { ...t, messages: [...t.messages, newMessage] } : t));
+    });
+  }, []);
+
   const riderStats = useMemo((): RiderStats => {
     if (role !== 'rider') return { total_deliveries: 0, total_earnings: 0, rating: 0 };
     const delivered = orders.filter((o) => o.rider_id === currentUser.id && o.status === 'delivered');
@@ -333,6 +413,7 @@ export function MockProvider({ children }: { children: ReactNode }) {
     products,
     orders,
     users,
+    supportThreads,
     addToCart,
     removeFromCart,
     updateCartQty,
@@ -342,6 +423,7 @@ export function MockProvider({ children }: { children: ReactNode }) {
     clearCart,
     createOrder,
     cancelOrder,
+    deleteOrder,
     updateOrderStatus,
     assignRider,
     acceptDelivery,
@@ -355,6 +437,10 @@ export function MockProvider({ children }: { children: ReactNode }) {
     blockUser,
     unblockUser,
     adjustPoints,
+    sendSupportMessage,
+    replySupportMessage,
+    notificationsEnabled,
+    setNotificationsEnabled,
     riderStats,
     adminStats,
   };
