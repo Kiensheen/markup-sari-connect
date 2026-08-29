@@ -142,12 +142,18 @@ function OrdersPage() {
                     )}
 
                     <div className="mt-2 space-y-1 text-xs">
-                      {o.items?.map((it, idx) => (
-                        <div key={idx} className="flex justify-between">
-                          <span className="line-clamp-1 text-gray-600">{it.name} × {it.quantity}</span>
-                          <span className="shrink-0 pl-2 text-gray-800">{peso(it.price * it.quantity)}</span>
-                        </div>
-                      ))}
+                      {o.items?.map((it, idx) => {
+                        const product = products.find((p) => p.id === it.product_id);
+                        const stock = product?.stock ?? 0;
+                        return (
+                          <div key={idx} className="flex items-center justify-between gap-2 py-1">
+                            <span className="line-clamp-1 text-gray-600">{it.name} × {it.quantity}</span>
+                            <span className="shrink-0 text-gray-500">
+                              {peso(it.price * it.quantity)}  ·  Stock: {stock}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
 
                     <div className="mt-2 space-y-0.5 border-t border-gray-100 pt-2 text-xs">

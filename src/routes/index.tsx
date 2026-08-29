@@ -117,6 +117,7 @@ function Index() {
                   <span className="text-sm font-bold text-emerald-600">₱{Number(p.wholesale_price).toLocaleString()}</span>
                   <span className="text-[10px] text-gray-400 line-through">₱{Number(p.price).toLocaleString()}</span>
                 </div>
+                <div className="text-[10px] text-gray-500">Stock: {p.stock}</div>
                 <div className="mt-auto pt-0.5">
                   {p.stock <= 0 ? (
                     <button disabled className="flex w-full items-center justify-center gap-1 rounded-lg bg-red-50 px-2 py-2 text-xs font-semibold text-red-500">

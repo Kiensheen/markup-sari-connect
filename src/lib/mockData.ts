@@ -331,7 +331,7 @@ export function formatDate(d: string | Date) {
 
 export const RIDER_ACTIVE_STATUSES = ['confirmed', 'assigned', 'picked_up', 'out_for_delivery'] as const;
 
-export const STORE_ADDRESS = '123 Wholesale Ave, Quezon City, Metro Manila';
+export const STORE_ADDRESS = '123 Wholesale Ave, Gitagum, Misamis Oriental';
 
 export const DELIVERY_FEE = 49;
 

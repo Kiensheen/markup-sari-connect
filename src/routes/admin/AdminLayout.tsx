@@ -224,7 +224,7 @@ export function AdminLayout() {
             <div className="ml-auto flex items-center gap-3">
               <div className="hidden items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600 sm:flex">
                 <Store className="h-3.5 w-3.5 text-blue-600" />
-                <span>Wholesale Store · QC</span>
+                <span>Wholesale Store · Gitagum</span>
               </div>
               <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5">
                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
